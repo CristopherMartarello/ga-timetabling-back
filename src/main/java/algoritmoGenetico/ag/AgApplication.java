@@ -23,30 +23,24 @@ public class AgApplication {
 
         String caminhoArquivoEM = "src/main/resources/planilhas/Curso_EngenhariaMecanica_Matutino.xlsx";
         List<Disciplina> disciplinaEM = FileReaderService.lerHorarios(caminhoArquivoEM);
-        int[] vetorEM = generateRandomPositionsForClassCode(disciplinaEM, true);
+        //int[] vetorEM = generateRandomPositionsForClassCode(disciplinaEM, true);
 
         String caminhoArquivoEQ = "src/main/resources/planilhas/Curso_EngenhariaQuimica_Matutino.xlsx";
         List<Disciplina> disciplinaEQ = FileReaderService.lerHorarios(caminhoArquivoEQ);
-        int[] vetorEQ = generateRandomPositionsForClassCode(disciplinaEQ, true);
+        //int[] vetorEQ = generateRandomPositionsForClassCode(disciplinaEQ, true);
 
         String caminhoArquivoTA = "src/main/resources/planilhas/Curso_TecnicoAdministracaoVespertino_aula3a6a.xlsx";
         List<Disciplina> disciplinaTA = FileReaderService.lerHorarios(caminhoArquivoTA);
-        int[] vetorTA = generateRandomPositionsForClassCode(disciplinaTA, true);
+        //int[] vetorTA = generateRandomPositionsForClassCode(disciplinaTA, true);
 
         String caminhoArquivoTI = "src/main/resources/planilhas/Curso_TecnicoInformaticaParaInternet_Vespertino_aula3a6a.xlsx";
         List<Disciplina> disciplinaTI = FileReaderService.lerHorarios(caminhoArquivoTI);
-        int[] vetorTI = generateRandomPositionsForClassCode(disciplinaTI, true);
+        //int[] vetorTI = generateRandomPositionsForClassCode(disciplinaTI, true);
 
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         List<Disciplina> disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
-        int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, true);
-
-        System.out.println(disciplinaCC.get(0).getProfessor());
-        System.out.println(disciplinaEM.get(0).getProfessor());
-        System.out.println(disciplinaEQ.get(0).getProfessor());
-        System.out.println(disciplinaTA.get(0).getProfessor());
-        System.out.println(disciplinaTI.get(0).getProfessor());
-        System.out.println(disciplinaTM.get(0).getProfessor());
+        // int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, true);
+        
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, boolean periodoFull) {
@@ -62,9 +56,9 @@ public class AgApplication {
         }
 
         if (periodoFull) {
-            cromossomos = generateNumberOfCromossomes(5, contarFases.size());
+            cromossomos = generateCromossomeSize(5, contarFases.size());
             vetorTurmaCodigo = new int[cromossomos];
-            randomizeCromossomesValues(cromossomos, listaAtual, contarFases);
+            generateCromossomeMatrice(cromossomos, listaAtual, contarFases);
         } else {
             // Fazer lógica para periodos variados (ex: 3a a 6a)
         }
@@ -72,14 +66,14 @@ public class AgApplication {
         return vetorTurmaCodigo;
     }
 
-    public static int generateNumberOfCromossomes(int dias, int fases) {
+    public static int generateCromossomeSize(int dias, int fases) {
         return (dias * 2) * fases;
     }
     
-    public static void randomizeCromossomesValues(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases) {
-        List<Integer> chaves = new ArrayList<>(fases.keySet());
-        List<Integer> valores = new ArrayList<>(fases.values());
-       
+    public static int[] randomizeCromossomesValues(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases) {
+        List<Integer> chaves = new ArrayList<>(fases.keySet()); //quais as fases disponíveis (2, 4, 6, 8)
+        List<Integer> valores = new ArrayList<>(fases.values());//quantas matérias possuem em cada fase no curso
+        
         int disciplinaPadding = tamanhoVetor / chaves.size();
        
         Random random = new Random();
@@ -102,7 +96,14 @@ public class AgApplication {
             contador = limiteSuperior;
         }
        
-        System.out.println(Arrays.toString(vetorRandomizado));  
+        return vetorRandomizado;
     }
-
+    
+    public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases) {
+        int[][] matrizCromossomo = new int[tamanhoVetor][10];
+        for (int i = 0; i < 10; i++) {
+            matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases);
+        }
+        return matrizCromossomo;
+    }
 }
