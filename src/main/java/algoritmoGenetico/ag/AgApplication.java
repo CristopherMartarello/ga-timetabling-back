@@ -58,7 +58,7 @@ public class AgApplication {
         if (periodoFull) {
             cromossomos = generateCromossomeSize(5, contarFases.size());
             vetorTurmaCodigo = new int[cromossomos];
-            generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso);
+            generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso, contarFases);
         } else {
             // Fazer lógica para periodos variados (ex: 3a a 6a)
         }
@@ -95,39 +95,70 @@ public class AgApplication {
 
             contador = limiteSuperior;
         }
-
         return vetorRandomizado;
     }
 
-    public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
-        int[][] matrizCromossomo = new int[tamanhoVetor][10];
+    public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso, 
+            Map<Integer, Integer> contarFases) {
+        int[][] matrizCromossomo = new int[10][tamanhoVetor];
         for (int i = 0; i < 10; i++) {
             matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases);
         }
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Arrays.toString(matrizCromossomo[i]));
+        }
+        fitnessFunction(matrizCromossomo, curso, listaAtual, contarFases);
         return matrizCromossomo;
     }
 
-    public static int[] fitnessFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual) {
+    public static int[] fitnessFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, Map<Integer, Integer> contarFases) {
         int pontuacao = 100;
-        int[] fitness = new int[10];
-        for (int i = 0; i < matrizCromossomo[0].length; i++) {
+        ArrayList fitness = new ArrayList();
+        ArrayList codLidos = new ArrayList();
+        System.out.println(contarFases);
+        int cont = 0;
+        for (int coluna = 0; coluna < 1; coluna++) {
             switch (curso) {
-                case "cc":
-                    for (int j = 0; j < matrizCromossomo.length; j++) {
-                        int codigo = matrizCromossomo[i][j];
-                        findWorkload(codigo, listaAtual);
-                        //TODO: continuar função
+                case "cc" -> {
+                    for (int linha = 0; linha < 10; linha++) {
+                        int codigo = matrizCromossomo[coluna][linha];
+                        int cargaHoraria = findWorkload(codigo, listaAtual);
+                        boolean existe = codLidos.contains(codigo);
+                        if (!existe) {
+                            System.out.println("entrei com o " + codigo);
+                            for (int i = 0; i < 10; i++) { //10 = PADDING
+                                if (codigo == matrizCromossomo[0][i]) {
+                                    cont++;
+                                }
+                            }
+                            codLidos.add(codigo);
+                            System.out.println(codLidos);
+                            if ((cargaHoraria == 80 && cont != 2) || (cargaHoraria == 40 && cont != 1)) {
+                                pontuacao = pontuacao - 10;
+                            }
+
+                        }
+
                     }
+                    System.out.println(pontuacao);
+                    fitness.add(pontuacao);
+                }
             }
+            codLidos.clear();
         }
 
         return null;
     }
-    
-    public static int findWorkload(int codigo, List<Disciplina> listaAtual){
+
+    public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
         //TODO: Verificar a carga horaria referente ao codigo
-        
-        return 0;
+        int cargaHoraria = 0;
+        for (int i = 0; i < listaAtual.size(); i++) {
+            if (codigo == listaAtual.get(i).getCodigo()) {
+                cargaHoraria = listaAtual.get(i).getCargaHoraria();
+            }
+        }
+        return cargaHoraria;
     }
 
 }
