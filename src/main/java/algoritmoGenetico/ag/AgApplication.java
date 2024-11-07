@@ -118,10 +118,10 @@ public class AgApplication {
         ArrayList fitness = new ArrayList();
         ArrayList codLidos = new ArrayList();
         int contadorPadding = 0, contRepeticao = 0;
-        for (int coluna = 0; coluna < 1; coluna++) {
+        for (int coluna = 0; coluna < matrizCromossomo.length; coluna++) {
             switch (curso) {
                 case "cc" -> {
-                    for (int linha = 0; linha < 40; linha++) {
+                    for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
                         int cont = 0;
                         int codigo = matrizCromossomo[coluna][linha];
                         int cargaHoraria = findWorkload(codigo, listaAtual);
@@ -150,17 +150,19 @@ public class AgApplication {
                             System.out.println("APAGUEI O VETOR");
                             int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
                             contRepeticao++;
-                            System.out.println(novaPontuacao);
-                            codLidos.clear();
-                            fitness.add(pontuacao);
+                            pontuacao = novaPontuacao;
+                            codLidos.clear();                            
                         }
                     }
+                    fitness.add(pontuacao);
                     pontuacao = 1000;
+                    contRepeticao = 0;
+                    contadorPadding = 0;
                 }
             }
 
         }
-
+        System.out.println(fitness);
         return null;
     }
 
