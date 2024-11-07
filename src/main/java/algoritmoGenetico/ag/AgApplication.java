@@ -107,9 +107,7 @@ public class AgApplication {
             matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases);
         }
 
-        for (int i = 0; i < 10; i++) {
-            System.out.println(Arrays.toString(matrizCromossomo[i]));
-        }
+        System.out.println(Arrays.toString(matrizCromossomo[0]));
 
         fitnessFunction(matrizCromossomo, curso, listaAtual, intervalosCodigosDeAula);
         return matrizCromossomo;
@@ -119,18 +117,19 @@ public class AgApplication {
         int pontuacao = 1000;
         ArrayList fitness = new ArrayList();
         ArrayList codLidos = new ArrayList();
-
+        int contadorPadding = 0, contRepeticao = 0;
         for (int coluna = 0; coluna < 1; coluna++) {
             switch (curso) {
                 case "cc" -> {
-                    for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
+                    for (int linha = 0; linha < 40; linha++) {
                         int cont = 0;
                         int codigo = matrizCromossomo[coluna][linha];
                         int cargaHoraria = findWorkload(codigo, listaAtual);
                         boolean existe = codLidos.contains(codigo);
-
+                        System.out.println("----------------------------------------------");
+                        System.out.println("Codigo: " + codigo + ", esta no Vetor? " + existe);
+                        contadorPadding++;
                         if (!existe) {
-
                             codLidos.add(codigo);
                             System.out.println("lidos: " + codLidos);
 
@@ -146,15 +145,20 @@ public class AgApplication {
                                 System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
                             }
                         }
-                    }
 
-                    int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao);
-                    fitness.add(novaPontuacao);
-                    System.out.println(fitness);
+                        if (contadorPadding % 10 == 0) {
+                            System.out.println("APAGUEI O VETOR");
+                            int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
+                            contRepeticao++;
+                            System.out.println(novaPontuacao);
+                            codLidos.clear();
+                            fitness.add(pontuacao);
+                        }
+                    }
+                    pontuacao = 1000;
                 }
             }
 
-            codLidos.clear();
         }
 
         return null;
@@ -171,15 +175,25 @@ public class AgApplication {
         return cargaHoraria;
     }
 
-    public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao) {
-        int totalCodigosDoCurso = 0;
-        
-        for (Integer qtdCod : intervalosCodigosDeAula) {
-            totalCodigosDoCurso = totalCodigosDoCurso + qtdCod;
+    public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao, int nRepeticao) {
+        int inicioLido = 0;
+        int finalLido = 0;
+        if (nRepeticao == 0) {
+            inicioLido = 1;
+            finalLido = intervalosCodigosDeAula.get(nRepeticao);
+        } else {            
+            int x = 0;
+            for (int i = 0; i < nRepeticao; i++) {
+                finalLido += intervalosCodigosDeAula.get(i);
+                inicioLido += intervalosCodigosDeAula.get(i);
+                x = i;
+            }
+            inicioLido += 1;
+            finalLido += intervalosCodigosDeAula.get(x + 1);
         }
 
         Set<Integer> esperado = new HashSet<>();
-        for (int i = 1; i <= totalCodigosDoCurso; i++) {
+        for (int i = inicioLido; i <= finalLido; i++) {
             esperado.add(i);
         }
 
@@ -190,7 +204,7 @@ public class AgApplication {
             for (Integer cod : esperado) {
                 pontuacao = pontuacao - 10;
             }
-            System.out.println("De 1 a " + totalCodigosDoCurso + " faltou: " + esperado + ", pontuacao " + pontuacao);
+            System.out.println("De " + inicioLido + " a " + finalLido + " faltou: " + esperado + ", pontuacao " + pontuacao);
         } else {
             System.out.println("Não faltou");
         }
