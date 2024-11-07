@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import model.Disciplina;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -58,7 +59,7 @@ public class AgApplication {
         if (periodoFull) {
             cromossomos = generateCromossomeSize(5, contarFases.size());
             vetorTurmaCodigo = new int[cromossomos];
-            generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso, contarFases);
+            generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso);
         } else {
             // Fazer lógica para periodos variados (ex: 3a a 6a)
         }
@@ -98,52 +99,61 @@ public class AgApplication {
         return vetorRandomizado;
     }
 
-    public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso, 
-            Map<Integer, Integer> contarFases) {
+    public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
+        List<Integer> intervalosCodigosDeAula = new ArrayList<>(fases.values());
         int[][] matrizCromossomo = new int[10][tamanhoVetor];
+
         for (int i = 0; i < 10; i++) {
             matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases);
         }
+
         for (int i = 0; i < 10; i++) {
             System.out.println(Arrays.toString(matrizCromossomo[i]));
         }
-        fitnessFunction(matrizCromossomo, curso, listaAtual, contarFases);
+
+        fitnessFunction(matrizCromossomo, curso, listaAtual, intervalosCodigosDeAula);
         return matrizCromossomo;
     }
 
-    public static int[] fitnessFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, Map<Integer, Integer> contarFases) {
-        int pontuacao = 100;
+    public static int[] fitnessFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Integer> intervalosCodigosDeAula) {
+        int pontuacao = 1000;
         ArrayList fitness = new ArrayList();
         ArrayList codLidos = new ArrayList();
-        System.out.println(contarFases);
-        int cont = 0;
+
         for (int coluna = 0; coluna < 1; coluna++) {
             switch (curso) {
                 case "cc" -> {
-                    for (int linha = 0; linha < 10; linha++) {
+                    for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
+                        int cont = 0;
                         int codigo = matrizCromossomo[coluna][linha];
                         int cargaHoraria = findWorkload(codigo, listaAtual);
                         boolean existe = codLidos.contains(codigo);
+
                         if (!existe) {
+
+                            codLidos.add(codigo);
+                            System.out.println("lidos: " + codLidos);
+
                             System.out.println("entrei com o " + codigo);
                             for (int i = 0; i < 10; i++) { //10 = PADDING
                                 if (codigo == matrizCromossomo[0][i]) {
                                     cont++;
                                 }
                             }
-                            codLidos.add(codigo);
-                            System.out.println(codLidos);
+
                             if ((cargaHoraria == 80 && cont != 2) || (cargaHoraria == 40 && cont != 1)) {
                                 pontuacao = pontuacao - 10;
+                                System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
                             }
-
                         }
-
                     }
-                    System.out.println(pontuacao);
-                    fitness.add(pontuacao);
+
+                    int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao);
+                    fitness.add(novaPontuacao);
+                    System.out.println(fitness);
                 }
             }
+
             codLidos.clear();
         }
 
@@ -159,6 +169,33 @@ public class AgApplication {
             }
         }
         return cargaHoraria;
+    }
+
+    public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao) {
+        int totalCodigosDoCurso = 0;
+        
+        for (Integer qtdCod : intervalosCodigosDeAula) {
+            totalCodigosDoCurso = totalCodigosDoCurso + qtdCod;
+        }
+
+        Set<Integer> esperado = new HashSet<>();
+        for (int i = 1; i <= totalCodigosDoCurso; i++) {
+            esperado.add(i);
+        }
+
+        Set<Integer> lidos = new HashSet<>(codLidos);
+        esperado.removeAll(lidos);
+
+        if (!esperado.isEmpty()) {
+            for (Integer cod : esperado) {
+                pontuacao = pontuacao - 10;
+            }
+            System.out.println("De 1 a " + totalCodigosDoCurso + " faltou: " + esperado + ", pontuacao " + pontuacao);
+        } else {
+            System.out.println("Não faltou");
+        }
+
+        return pontuacao;
     }
 
 }
