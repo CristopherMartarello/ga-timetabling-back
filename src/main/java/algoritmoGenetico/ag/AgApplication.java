@@ -135,7 +135,7 @@ public class AgApplication {
                             System.out.println("lidos: " + codLidos);
 
                             System.out.println("entrei com o " + codigo);
-                            for (int i = 0; i < 10; i++) { //10 = PADDING
+                            for (int i = 0; i < matrizCromossomo[0].length; i++) { //10 = PADDING
                                 if (codigo == matrizCromossomo[0][i]) {
                                     cont++;
                                 }
