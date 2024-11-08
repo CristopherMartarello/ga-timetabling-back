@@ -42,7 +42,7 @@ public class AgApplication {
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         List<Disciplina> disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
         // int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, true, "tm");
-        
+
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, boolean periodoFull, String curso) {
@@ -103,7 +103,7 @@ public class AgApplication {
     public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
         ArrayList fitnessWorkLoad = new ArrayList();
         ArrayList fitnessProfessorAvaiability = new ArrayList();
-        
+
         List<Integer> intervalosCodigosDeAula = new ArrayList<>(fases.values());
         int[][] matrizCromossomo = new int[10][tamanhoVetor];
 
@@ -112,13 +112,11 @@ public class AgApplication {
         }
 
 //        System.out.println(Arrays.toString(matrizCromossomo[0]));
-
         fitnessWorkLoad = fitnessWorkLoadFunction(matrizCromossomo, curso, listaAtual, intervalosCodigosDeAula);
-        
-        
+
         String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
-        
+
         fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
         return matrizCromossomo;
     }
@@ -161,7 +159,7 @@ public class AgApplication {
                             int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
                             contRepeticao++;
                             pontuacao = novaPontuacao;
-                            codLidos.clear();                            
+                            codLidos.clear();
                         }
                     }
                     fitness.add(pontuacao);
@@ -177,13 +175,48 @@ public class AgApplication {
     }
 
     public static ArrayList fitnessProfessorAvaiabilityFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Professor> disponibilidadeProfessores) {
-        System.out.println(disponibilidadeProfessores.get(1).getNome());
-        
-        return null;
+        //TODO verificar se realmente os descontos estão batendo, aparentemente sim, mas tem que ver mais afundo  
+        int desconto = 0;
+        ArrayList descontos = new ArrayList();
+        List<String> dias = new ArrayList<>(List.of("Segunda", "Terca", "Quarta", "Quinta", "Sexta"));
+        int contDias = 0;
+        System.out.println(Arrays.toString(matrizCromossomo[0]));
+        for (int coluna = 0; coluna < matrizCromossomo.length; coluna++) {
+            switch (curso) {
+                case "cc" -> {
+                    for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
+                        System.out.println("================================");
+                        int codigo = matrizCromossomo[coluna][linha];                        
+                        String nomeProfessor = findProfessorName(codigo, listaAtual);
+                        System.out.println(nomeProfessor);
+                        ArrayList indisponibilidadeProfessor = findProfessorDisponibility(nomeProfessor, disponibilidadeProfessores);
+                        if (indisponibilidadeProfessor.isEmpty()) {
+                            System.out.println("Professor não possui indisponibilidade");
+                        }
+                        for (int i = 0; i < indisponibilidadeProfessor.size(); i++) {
+                            System.out.println("Dias indisponíveis: " + indisponibilidadeProfessor.get(i).toString());
+                            System.out.println("Data pra ser marcado: "+ dias.get(contDias));
+                            if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
+                                System.out.println("Dia encontrado: " + indisponibilidadeProfessor.get(i).toString());
+                                desconto += 10;
+                            }
+                        }
+                        contDias++;
+                        if (contDias == 5) {
+                            contDias = 0;
+                        }                        
+                    }
+                    descontos.add(desconto);
+                    desconto = 0;
+                }
+            }
+
+        }
+        System.out.println(descontos);
+        return descontos;
     }
-    
+
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
-        //TODO: Verificar a carga horaria referente ao codigo
         int cargaHoraria = 0;
         for (int i = 0; i < listaAtual.size(); i++) {
             if (codigo == listaAtual.get(i).getCodigo()) {
@@ -193,13 +226,59 @@ public class AgApplication {
         return cargaHoraria;
     }
 
+    public static String findProfessorName(int codigo, List<Disciplina> listaAtual) {        
+        for (int i = 0; i < listaAtual.size(); i++) {
+            if (codigo == listaAtual.get(i).getCodigo()) {                
+                return listaAtual.get(i).getProfessor();
+            }
+        }
+
+        return null;
+    }
+
+    public static ArrayList findProfessorDisponibility(String nome, List<Professor> disponibilidade) {
+        ArrayList diasIndisponiveis = new ArrayList();
+        ArrayList diasProfessores = new ArrayList();
+        for (int i = 0; i < disponibilidade.size(); i++) {
+            if (nome.equals(disponibilidade.get(i).getNome())) {
+                diasProfessores = disponibilidade.get(i).getHorarios();
+                for (int j = 0; j < diasProfessores.size(); j++) {
+                    if ((int) diasProfessores.get(j) == 1) {
+                        switch (j) {
+                            case 0:
+                                diasIndisponiveis.add("Segunda");
+                                break;
+                            case 1:
+                                diasIndisponiveis.add("Terca");
+                                break;
+                            case 2:
+                                diasIndisponiveis.add("Quarta");
+                                break;
+                            case 3:
+                                diasIndisponiveis.add("Quinta");
+                                break;
+                            case 4:
+                                diasIndisponiveis.add("Sexta");
+                                break;
+                            default:
+                                throw new AssertionError();
+                        }
+                    }
+
+                }
+                break;
+            }
+        }
+        return diasIndisponiveis;
+    }
+
     public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao, int nRepeticao) {
         int inicioLido = 0;
         int finalLido = 0;
         if (nRepeticao == 0) {
             inicioLido = 1;
             finalLido = intervalosCodigosDeAula.get(nRepeticao);
-        } else {            
+        } else {
             int x = 0;
             for (int i = 0; i < nRepeticao; i++) {
                 finalLido += intervalosCodigosDeAula.get(i);
