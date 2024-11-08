@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import model.Disciplina;
+import model.Professor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import service.FileReaderService;
@@ -42,9 +43,6 @@ public class AgApplication {
         List<Disciplina> disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
         // int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, true, "tm");
         
-        
-        String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
-        List<Disciplina> disciplinaDP = FileReaderService.lerHorarios(caminhoArquivoDP);
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, boolean periodoFull, String curso) {
@@ -103,6 +101,9 @@ public class AgApplication {
     }
 
     public static int[][] generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
+        ArrayList fitnessWorkLoad = new ArrayList();
+        ArrayList fitnessProfessorAvaiability = new ArrayList();
+        
         List<Integer> intervalosCodigosDeAula = new ArrayList<>(fases.values());
         int[][] matrizCromossomo = new int[10][tamanhoVetor];
 
@@ -110,13 +111,19 @@ public class AgApplication {
             matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases);
         }
 
-        System.out.println(Arrays.toString(matrizCromossomo[0]));
+//        System.out.println(Arrays.toString(matrizCromossomo[0]));
 
-        fitnessFunction(matrizCromossomo, curso, listaAtual, intervalosCodigosDeAula);
+        fitnessWorkLoad = fitnessWorkLoadFunction(matrizCromossomo, curso, listaAtual, intervalosCodigosDeAula);
+        
+        
+        String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
+        List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
+        
+        fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
         return matrizCromossomo;
     }
 
-    public static int[] fitnessFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Integer> intervalosCodigosDeAula) {
+    public static ArrayList fitnessWorkLoadFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Integer> intervalosCodigosDeAula) {
         int pontuacao = 1000;
         ArrayList fitness = new ArrayList();
         ArrayList codLidos = new ArrayList();
@@ -129,14 +136,14 @@ public class AgApplication {
                         int codigo = matrizCromossomo[coluna][linha];
                         int cargaHoraria = findWorkload(codigo, listaAtual);
                         boolean existe = codLidos.contains(codigo);
-                        System.out.println("----------------------------------------------");
-                        System.out.println("Codigo: " + codigo + ", esta no Vetor? " + existe);
+//                        System.out.println("----------------------------------------------");
+//                        System.out.println("Codigo: " + codigo + ", esta no Vetor? " + existe);
                         contadorPadding++;
                         if (!existe) {
                             codLidos.add(codigo);
-                            System.out.println("lidos: " + codLidos);
-
-                            System.out.println("entrei com o " + codigo);
+//                            System.out.println("lidos: " + codLidos);
+//
+//                            System.out.println("entrei com o " + codigo);
                             for (int i = 0; i < matrizCromossomo[0].length; i++) { //10 = PADDING
                                 if (codigo == matrizCromossomo[0][i]) {
                                     cont++;
@@ -145,12 +152,12 @@ public class AgApplication {
 
                             if ((cargaHoraria == 80 && cont != 2) || (cargaHoraria == 40 && cont != 1)) {
                                 pontuacao = pontuacao - 10;
-                                System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
+//                                System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
                             }
                         }
 
                         if (contadorPadding % 10 == 0) {
-                            System.out.println("APAGUEI O VETOR");
+//                            System.out.println("APAGUEI O VETOR");
                             int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
                             contRepeticao++;
                             pontuacao = novaPontuacao;
@@ -166,9 +173,15 @@ public class AgApplication {
 
         }
         System.out.println(fitness);
-        return null;
+        return fitness;
     }
 
+    public static ArrayList fitnessProfessorAvaiabilityFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Professor> disponibilidadeProfessores) {
+        System.out.println(disponibilidadeProfessores.get(1).getNome());
+        
+        return null;
+    }
+    
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
         //TODO: Verificar a carga horaria referente ao codigo
         int cargaHoraria = 0;
@@ -209,9 +222,9 @@ public class AgApplication {
             for (Integer cod : esperado) {
                 pontuacao = pontuacao - 10;
             }
-            System.out.println("De " + inicioLido + " a " + finalLido + " faltou: " + esperado + ", pontuacao " + pontuacao);
+//            System.out.println("De " + inicioLido + " a " + finalLido + " faltou: " + esperado + ", pontuacao " + pontuacao);
         } else {
-            System.out.println("Não faltou");
+//            System.out.println("Não faltou");
         }
 
         return pontuacao;

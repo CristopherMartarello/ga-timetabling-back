@@ -1,4 +1,5 @@
 package service;
+
 /**
  *
  * @author Nathan
@@ -11,14 +12,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import model.Professor;
 
 public class FileReaderService {
-    
-     public static List<Disciplina> lerHorarios(String caminhoArquivo) {
+
+    public static List<Disciplina> lerHorarios(String caminhoArquivo) {
         List<Disciplina> disciplinas = new ArrayList<>();
 
-        try (FileInputStream fis = new FileInputStream(caminhoArquivo);
-             Workbook workbook = new XSSFWorkbook(fis)) {
+        try (FileInputStream fis = new FileInputStream(caminhoArquivo); Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
             for (int i = 2; i <= sheet.getLastRowNum(); i++) {
@@ -39,5 +40,34 @@ public class FileReaderService {
         }
 
         return disciplinas;
+    }
+
+    public static List<Professor> lerHorariosProfessores(String caminhoArquivo) {
+        List<Professor> professores = new ArrayList<>();
+        
+        try (FileInputStream fis = new FileInputStream(caminhoArquivo); Workbook workbook = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                ArrayList horarios = new ArrayList();
+                horarios.clear();
+
+                String nome = row.getCell(0).getStringCellValue();
+                horarios.add((int) row.getCell(1).getNumericCellValue());
+                horarios.add((int) row.getCell(2).getNumericCellValue());
+                horarios.add((int) row.getCell(3).getNumericCellValue());
+                horarios.add((int) row.getCell(4).getNumericCellValue());
+                horarios.add((int) row.getCell(5).getNumericCellValue());
+
+                Professor prof = new Professor(nome, horarios);
+                professores.add(prof);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return professores;
     }
 }
