@@ -41,7 +41,10 @@ public class AgApplication {
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         List<Disciplina> disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
         // int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, true, "tm");
-
+        
+        
+        String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
+        List<Disciplina> disciplinaDP = FileReaderService.lerHorarios(caminhoArquivoDP);
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, boolean periodoFull, String curso) {
