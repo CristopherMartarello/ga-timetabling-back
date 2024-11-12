@@ -17,11 +17,21 @@ import service.FileReaderService;
 @SpringBootApplication
 public class AgApplication {
 
+    public static boolean leuCC = false, leuEM = false, leuEQ = false,
+            leuTA = false, leuTI = false, leuTM = false;
+
+    public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),
+            fitnessTA = new ArrayList(), fitnessTI = new ArrayList(), fitnessTM = new ArrayList();
+    
+    public static int[][] matrizCC = new int[20][40], matrizEM = new int[20][40], matrizEQ = new int[20][40],
+            matrizTA = new int[20][40], matrizTI = new int[20][40], matrizTM = new int[20][40];
+
     public static void main(String[] args) {
         SpringApplication.run(AgApplication.class, args);
+
         String caminhoArquivoCC = "src/main/resources/planilhas/Curso_CienciaComputacao.xlsx";
         List<Disciplina> disciplinaCC = FileReaderService.lerHorarios(caminhoArquivoCC);
-        int[] vetorCC = generateRandomPositionsForClassCode(disciplinaCC, true, "cc");
+        //int[] vetorCC = generateRandomPositionsForClassCode(disciplinaCC, "cc");
 
         String caminhoArquivoEM = "src/main/resources/planilhas/Curso_EngenhariaMecanica_Matutino.xlsx";
         List<Disciplina> disciplinaEM = FileReaderService.lerHorarios(caminhoArquivoEM);
@@ -41,11 +51,11 @@ public class AgApplication {
 
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         List<Disciplina> disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
-        // int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, true, "tm");
+        int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
 
     }
 
-    public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, boolean periodoFull, String curso) {
+    public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
         int cromossomos = 0;
         int[] vetorTurmaCodigo = null;
 
@@ -57,13 +67,9 @@ public class AgApplication {
             codigosDeAula.add(d.getCodigo());
         }
 
-        if (periodoFull) {
-            cromossomos = generateCromossomeSize(5, contarFases.size());
-            vetorTurmaCodigo = new int[cromossomos];
-            generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso);
-        } else {
-            // Fazer lógica para periodos variados (ex: 3a a 6a)
-        }
+        cromossomos = generateCromossomeSize(5, contarFases.size());
+        vetorTurmaCodigo = new int[cromossomos];
+        generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso);
 
         return vetorTurmaCodigo;
     }
@@ -72,7 +78,7 @@ public class AgApplication {
         return (dias * 2) * fases;
     }
 
-    public static int[] randomizeCromossomesValues(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases) {
+    public static int[] randomizeCromossomesValues(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
         List<Integer> chaves = new ArrayList<>(fases.keySet()); //quais as fases disponíveis (2, 4, 6, 8)
         List<Integer> valores = new ArrayList<>(fases.values());//quantas matérias possuem em cada fase no curso
 
@@ -81,7 +87,7 @@ public class AgApplication {
         Random random = new Random();
         int[] vetorRandomizado = new int[tamanhoVetor];
 
-        int contador = 0;
+        int contador = 0, contadorPeriodo = 1;
 
         for (int i = 0; i < chaves.size(); i++) {
             int valorAtual = valores.get(i);
@@ -92,7 +98,14 @@ public class AgApplication {
 
             // Preenche com os números aleatórios daquele intervalo
             for (int j = 0; j < disciplinaPadding && (i * disciplinaPadding + j) < tamanhoVetor; j++) {
-                vetorRandomizado[i * disciplinaPadding + j] = random.nextInt(limiteSuperior - limiteInferior + 1) + limiteInferior;
+                if ((curso.equals("ta") || curso.equals("ti") || curso.equals("tm"))
+                        && (contadorPeriodo == 1 || contadorPeriodo == 6 || contadorPeriodo == 11 || contadorPeriodo == 16
+                        || contadorPeriodo == 21 || contadorPeriodo == 26 || contadorPeriodo == 31 || contadorPeriodo == 36)) {
+                    vetorRandomizado[i * disciplinaPadding + j] = -1;
+                } else {
+                    vetorRandomizado[i * disciplinaPadding + j] = random.nextInt(limiteSuperior - limiteInferior + 1) + limiteInferior;
+                }
+                contadorPeriodo++;
             }
 
             contador = limiteSuperior;
@@ -105,10 +118,10 @@ public class AgApplication {
         ArrayList fitnessProfessorAvaiability = new ArrayList();
 
         List<Integer> intervalosCodigosDeAula = new ArrayList<>(fases.values());
-        int[][] matrizCromossomo = new int[10][tamanhoVetor];
+        int[][] matrizCromossomo = new int[20][tamanhoVetor];
 
-        for (int i = 0; i < 10; i++) {
-            matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases);
+        for (int i = 0; i < 20; i++) {
+            matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases, curso);
         }
 
 //        System.out.println(Arrays.toString(matrizCromossomo[0]));
@@ -118,6 +131,35 @@ public class AgApplication {
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
 
         fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
+        for (int i = 0; i < fitnessWorkLoad.size(); i++) {
+            switch (curso) {
+                case "cc": {
+                    fitnessCC.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
+                    matrizCC = matrizCromossomo;
+                }
+                case "em":{
+                    fitnessEM.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
+                    matrizEM = matrizCromossomo;
+                }
+                case "eq":{
+                    fitnessEQ.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
+                    matrizEQ = matrizCromossomo;
+                }
+                case "ta": {
+                    fitnessTA.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
+                    matrizTA = matrizCromossomo;
+                }
+                case "ti": {
+                    fitnessTI.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
+                    matrizTI = matrizCromossomo;
+                }
+                case "tm":{
+                    fitnessTM.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
+                    matrizTM = matrizCromossomo;
+                }
+            }
+        }
+        
         return matrizCromossomo;
     }
 
@@ -127,47 +169,45 @@ public class AgApplication {
         ArrayList codLidos = new ArrayList();
         int contadorPadding = 0, contRepeticao = 0;
         for (int coluna = 0; coluna < matrizCromossomo.length; coluna++) {
-            switch (curso) {
-                case "cc" -> {
-                    for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
-                        int cont = 0;
-                        int codigo = matrizCromossomo[coluna][linha];
-                        int cargaHoraria = findWorkload(codigo, listaAtual);
-                        boolean existe = codLidos.contains(codigo);
+            for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
+                int cont = 0;
+                int codigo = matrizCromossomo[coluna][linha];
+                if (codigo != -1) { //verifica se tem aula no dia
+                    int cargaHoraria = findWorkload(codigo, listaAtual);
+                    boolean existe = codLidos.contains(codigo);
 //                        System.out.println("----------------------------------------------");
 //                        System.out.println("Codigo: " + codigo + ", esta no Vetor? " + existe);
-                        contadorPadding++;
-                        if (!existe) {
-                            codLidos.add(codigo);
+                    contadorPadding++;
+                    if (!existe) {
+                        codLidos.add(codigo);
 //                            System.out.println("lidos: " + codLidos);
 //
 //                            System.out.println("entrei com o " + codigo);
-                            for (int i = 0; i < matrizCromossomo[0].length; i++) { //10 = PADDING
-                                if (codigo == matrizCromossomo[0][i]) {
-                                    cont++;
-                                }
-                            }
-
-                            if ((cargaHoraria == 80 && cont != 2) || (cargaHoraria == 40 && cont != 1)) {
-                                pontuacao = pontuacao - 10;
-//                                System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
+                        for (int i = 0; i < matrizCromossomo[0].length; i++) { //10 = PADDING
+                            if (codigo == matrizCromossomo[0][i]) {
+                                cont++;
                             }
                         }
 
-                        if (contadorPadding % 10 == 0) {
-//                            System.out.println("APAGUEI O VETOR");
-                            int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
-                            contRepeticao++;
-                            pontuacao = novaPontuacao;
-                            codLidos.clear();
+                        if ((cargaHoraria == 80 && cont != 2) || (cargaHoraria == 40 && cont != 1)) {
+                            pontuacao = pontuacao - 10;
+//                                System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
                         }
                     }
-                    fitness.add(pontuacao);
-                    pontuacao = 1000;
-                    contRepeticao = 0;
-                    contadorPadding = 0;
+
+                    if (contadorPadding % 10 == 0) {
+//                            System.out.println("APAGUEI O VETOR");
+                        int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
+                        contRepeticao++;
+                        pontuacao = novaPontuacao;
+                        codLidos.clear();
+                    }
                 }
             }
+            fitness.add(pontuacao);
+            pontuacao = 1000;
+            contRepeticao = 0;
+            contadorPadding = 0;
 
         }
         System.out.println(fitness);
@@ -175,45 +215,53 @@ public class AgApplication {
     }
 
     public static ArrayList fitnessProfessorAvaiabilityFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Professor> disponibilidadeProfessores) {
-        //TODO verificar se realmente os descontos estão batendo, aparentemente sim, mas tem que ver mais afundo  
         int desconto = 0;
         ArrayList descontos = new ArrayList();
         List<String> dias = new ArrayList<>(List.of("Segunda", "Terca", "Quarta", "Quinta", "Sexta"));
         int contDias = 0;
-        System.out.println(Arrays.toString(matrizCromossomo[0]));
+        //System.out.println(Arrays.toString(matrizCromossomo[0]));
         for (int coluna = 0; coluna < matrizCromossomo.length; coluna++) {
-            switch (curso) {
-                case "cc" -> {
-                    for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
-                        System.out.println("================================");
-                        int codigo = matrizCromossomo[coluna][linha];                        
-                        String nomeProfessor = findProfessorName(codigo, listaAtual);
-                        System.out.println(nomeProfessor);
-                        ArrayList indisponibilidadeProfessor = findProfessorDisponibility(nomeProfessor, disponibilidadeProfessores);
-                        if (indisponibilidadeProfessor.isEmpty()) {
-                            System.out.println("Professor não possui indisponibilidade");
-                        }
-                        for (int i = 0; i < indisponibilidadeProfessor.size(); i++) {
-                            System.out.println("Dias indisponíveis: " + indisponibilidadeProfessor.get(i).toString());
-                            System.out.println("Data pra ser marcado: "+ dias.get(contDias));
-                            if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
-                                System.out.println("Dia encontrado: " + indisponibilidadeProfessor.get(i).toString());
-                                desconto += 10;
-                            }
-                        }
-                        contDias++;
-                        if (contDias == 5) {
-                            contDias = 0;
-                        }                        
+
+            for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
+                //System.out.println("================================");
+                int codigo = matrizCromossomo[coluna][linha];
+                if (codigo != -1) {
+                    String nomeProfessor = findProfessorName(codigo, listaAtual);
+                    //System.out.println(nomeProfessor);
+                    ArrayList indisponibilidadeProfessor = findProfessorDisponibility(nomeProfessor, disponibilidadeProfessores);
+                    if (indisponibilidadeProfessor.isEmpty()) {
+                        //System.out.println("Professor não possui indisponibilidade");
                     }
-                    descontos.add(desconto);
-                    desconto = 0;
+                    for (int i = 0; i < indisponibilidadeProfessor.size(); i++) {
+                        //System.out.println("Dias indisponíveis: " + indisponibilidadeProfessor.get(i).toString());
+                        //System.out.println("Data pra ser marcado: " + dias.get(contDias));
+                        if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
+                            //System.out.println("DIA ENCONTRADO PORRA: " + indisponibilidadeProfessor.get(i).toString());
+                            desconto += 10;
+                            break;
+                        }
+                    }
+                    contDias++;
+                    if (contDias == 5) {
+                        contDias = 0;
+                    }
                 }
             }
+            descontos.add(desconto);
+            desconto = 0;
 
         }
         System.out.println(descontos);
         return descontos;
+    }
+
+    public static ArrayList fitnessBetweenCourses() {
+        if (leuCC && leuEQ && leuEM && leuTA && leuTI && leuTM) {
+            //TODO: LOGICA DO FITNESS DOS CURSOS
+            
+        }
+
+        return null;
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
@@ -226,9 +274,9 @@ public class AgApplication {
         return cargaHoraria;
     }
 
-    public static String findProfessorName(int codigo, List<Disciplina> listaAtual) {        
+    public static String findProfessorName(int codigo, List<Disciplina> listaAtual) {
         for (int i = 0; i < listaAtual.size(); i++) {
-            if (codigo == listaAtual.get(i).getCodigo()) {                
+            if (codigo == listaAtual.get(i).getCodigo()) {
                 return listaAtual.get(i).getProfessor();
             }
         }
