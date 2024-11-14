@@ -38,19 +38,19 @@ public class AgApplication {
 
         String caminhoArquivoEQ = "src/main/resources/planilhas/Curso_EngenhariaQuimica_Matutino.xlsx";
         disciplinaEQ = FileReaderService.lerHorarios(caminhoArquivoEQ);
-        //int[] vetorEQ = generateRandomPositionsForClassCode(disciplinaEQ, true, "eq");
+        int[] vetorEQ = generateRandomPositionsForClassCode(disciplinaEQ, "eq");
 
         String caminhoArquivoTA = "src/main/resources/planilhas/Curso_TecnicoAdministracaoVespertino_aula3a6a.xlsx";
         disciplinaTA = FileReaderService.lerHorarios(caminhoArquivoTA);
-        //int[] vetorTA = generateRandomPositionsForClassCode(disciplinaTA, true, "ta");
+        int[] vetorTA = generateRandomPositionsForClassCode(disciplinaTA, "ta");
 
         String caminhoArquivoTI = "src/main/resources/planilhas/Curso_TecnicoInformaticaParaInternet_Vespertino_aula3a6a.xlsx";
         disciplinaTI = FileReaderService.lerHorarios(caminhoArquivoTI);
-        //int[] vetorTI = generateRandomPositionsForClassCode(disciplinaTI, true, "ti");
+        int[] vetorTI = generateRandomPositionsForClassCode(disciplinaTI, "ti");
 
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
-        //int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
+        int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
         fitnessBetweenCourses();
     }
 
@@ -79,15 +79,14 @@ public class AgApplication {
     public static int[] randomizeCromossomesValues(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
         List<Integer> chaves = new ArrayList<>(fases.keySet()); //quais as fases disponíveis (2, 4, 6, 8)
         List<Integer> valores = new ArrayList<>(fases.values());//quantas matérias possuem em cada fase no curso
-
-        int disciplinaPadding = tamanhoVetor / chaves.size();
+        int disciplinaPadding = tamanhoVetor / 4;
 
         Random random = new Random();
         int[] vetorRandomizado = new int[tamanhoVetor];
 
         int contador = 0, contadorPeriodo = 1;
 
-        for (int i = 0; i < chaves.size(); i++) {
+        for (int i = 0; i < 4; i++) {
             int valorAtual = valores.get(i);
 
             // Define os limites para randomização (pegar a partir de acordo com os códigos das fases)
@@ -260,38 +259,40 @@ public class AgApplication {
 
     public static void fitnessBetweenCourses() {
         //Fitness: verifica se um professor não está dando aula em outra turma
-        System.out.println("Fitness CC: " + fitnessCC);
-        System.out.println("-----------------------------");
-        System.out.println(Arrays.toString(matrizCC[0]));
-        System.out.println(Arrays.toString(matrizEM[0]));
-        int desconto = 0;
+        System.out.println("ANTES: " + fitnessCC);
+        System.out.println("ANTES: " + fitnessEM);
+        System.out.println("ANTES: " + fitnessEQ);
+        System.out.println("ANTES: " + fitnessTA);
+        System.out.println("ANTES: " + fitnessTI);
+        System.out.println("ANTES: " + fitnessTM);
         //faz um 'for' do tamanho das matrizes para a comparação
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < matrizCC.length; i++) {
+            System.out.println("--------------------");
             for (int j = 0; j < matrizCC[0].length; j++) {
                 //pega todos os códigos das aulas referente aos cursos
                 int codigoCC = matrizCC[i][j];
                 int codigoEM = matrizEM[i][j];
-                /*int codigoEQ = matrizEQ[i][j];
+                int codigoEQ = matrizEQ[i][j];
                 int codigoTA = matrizTA[i][j];
                 int codigoTI = matrizTI[i][j];
-                int codigoTM = matrizTM[i][j];*/
+                int codigoTM = matrizTM[i][j];
 
                 //acha o professor responsável por aquela aula
                 String nomeCC = findProfessorName(codigoCC, disciplinaCC);
                 String nomeEM = findProfessorName(codigoEM, disciplinaEM);
-                System.out.println(nomeCC + " x " + nomeEM);
-                System.out.println(codigoCC + " x " + codigoEM);
-                /*String nomeEQ = findProfessorName(codigoEQ, disciplinaEQ);
+                String nomeEQ = findProfessorName(codigoEQ, disciplinaEQ);
                 String nomeTA = findProfessorName(codigoTA, disciplinaTA);
                 String nomeTI = findProfessorName(codigoTI, disciplinaTI);
-                String nomeTM = findProfessorName(codigoTM, disciplinaTM);*/
+                String nomeTM = findProfessorName(codigoTM, disciplinaTM);
 
                 //verificações curso graduação
                 if (nomeCC.equals(nomeEM)) {
+                    //System.out.println(nomeCC + " x " + nomeEM);
+                    //System.out.println(codigoCC + " x " + codigoEM);
                     fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
                     fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
                 }
-                /*if (nomeCC.equals(nomeEQ)) {
+                if (nomeCC.equals(nomeEQ)) {
                     fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
                     fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
                 }
@@ -311,10 +312,15 @@ public class AgApplication {
                 if (nomeTI.equals(nomeTM)) {
                     fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
                     fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
-                }*/
+                }
             }
         }
-        System.out.println("Fitness CC: " + fitnessCC);
+        System.out.println("DEPOIS: " + fitnessCC);
+        System.out.println("DEPOIS: " + fitnessEM);
+        System.out.println("DEPOIS: " + fitnessEQ);
+        System.out.println("DEPOIS: " + fitnessTA);
+        System.out.println("DEPOIS: " + fitnessTI);
+        System.out.println("DEPOIS: " + fitnessTM);
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
