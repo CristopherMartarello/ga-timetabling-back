@@ -22,7 +22,7 @@ public class AgApplication {
 
     public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),
             fitnessTA = new ArrayList(), fitnessTI = new ArrayList(), fitnessTM = new ArrayList();
-    
+
     public static int[][] matrizCC = new int[20][40], matrizEM = new int[20][40], matrizEQ = new int[20][40],
             matrizTA = new int[20][40], matrizTI = new int[20][40], matrizTM = new int[20][40];
 
@@ -137,11 +137,11 @@ public class AgApplication {
                     fitnessCC.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizCC = matrizCromossomo;
                 }
-                case "em":{
+                case "em": {
                     fitnessEM.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizEM = matrizCromossomo;
                 }
-                case "eq":{
+                case "eq": {
                     fitnessEQ.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizEQ = matrizCromossomo;
                 }
@@ -153,13 +153,13 @@ public class AgApplication {
                     fitnessTI.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizTI = matrizCromossomo;
                 }
-                case "tm":{
+                case "tm": {
                     fitnessTM.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizTM = matrizCromossomo;
                 }
             }
         }
-        
+
         return matrizCromossomo;
     }
 
@@ -255,10 +255,46 @@ public class AgApplication {
         return descontos;
     }
 
-    public static ArrayList fitnessBetweenCourses() {
+    public static ArrayList fitnessBetweenCourses(List<Disciplina> listaAtual) {
         if (leuCC && leuEQ && leuEM && leuTA && leuTI && leuTM) {
             //TODO: LOGICA DO FITNESS DOS CURSOS
-            
+            for (int i = 0; i < matrizCC.length; i++) {
+                for (int j = 0; j < matrizCC[0].length; j++) {
+                    int codigoCC = matrizCC[i][j];
+                    int codigoEM = matrizEM[i][j];
+                    int codigoEQ = matrizEQ[i][j];
+                    int codigoTA = matrizTA[i][j];
+                    int codigoTI = matrizTI[i][j];
+                    int codigoTM = matrizTM[i][j];
+                    String nomeCC = findProfessorName(codigoCC, listaAtual);
+                    String nomeEM = findProfessorName(codigoEM, listaAtual);
+                    String nomeEQ = findProfessorName(codigoEQ, listaAtual);
+                    String nomeTA = findProfessorName(codigoTA, listaAtual);
+                    String nomeTI = findProfessorName(codigoTI, listaAtual);
+                    String nomeTM = findProfessorName(codigoTM, listaAtual);
+                   
+                    if (nomeCC.equals(nomeEM)) {
+                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
+                        fitnessEM.set(i, (int)fitnessEM.get(i)-10);
+                    }
+                    if (nomeCC.equals(nomeEQ)) {
+                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
+                        fitnessEQ.set(i, (int)fitnessEQ.get(i)-10);
+                    }
+                    if (nomeCC.equals(nomeTA)) {
+                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
+                        fitnessTA.set(i, (int)fitnessTA.get(i)-10);
+                    }
+                    if (nomeCC.equals(nomeTI)) {
+                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
+                        fitnessTI.set(i, (int)fitnessTI.get(i)-10);
+                    }
+                    if (nomeCC.equals(nomeTM)) {
+                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
+                        fitnessTM.set(i, (int)fitnessTM.get(i)-10);
+                    }
+                }
+            }
         }
 
         return null;
@@ -275,13 +311,15 @@ public class AgApplication {
     }
 
     public static String findProfessorName(int codigo, List<Disciplina> listaAtual) {
-        for (int i = 0; i < listaAtual.size(); i++) {
-            if (codigo == listaAtual.get(i).getCodigo()) {
-                return listaAtual.get(i).getProfessor();
+        if (codigo != -1) {
+            for (int i = 0; i < listaAtual.size(); i++) {
+                if (codigo == listaAtual.get(i).getCodigo()) {
+                    return listaAtual.get(i).getProfessor();
+                }
             }
         }
 
-        return null;
+        return "";
     }
 
     public static ArrayList findProfessorDisponibility(String nome, List<Professor> disponibilidade) {
