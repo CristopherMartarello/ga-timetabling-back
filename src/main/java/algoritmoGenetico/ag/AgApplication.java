@@ -17,42 +17,41 @@ import service.FileReaderService;
 @SpringBootApplication
 public class AgApplication {
 
-    public static boolean leuCC = false, leuEM = false, leuEQ = false,
-            leuTA = false, leuTI = false, leuTM = false;
-
     public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),
             fitnessTA = new ArrayList(), fitnessTI = new ArrayList(), fitnessTM = new ArrayList();
 
     public static int[][] matrizCC = new int[20][40], matrizEM = new int[20][40], matrizEQ = new int[20][40],
             matrizTA = new int[20][40], matrizTI = new int[20][40], matrizTM = new int[20][40];
 
+    public static List<Disciplina> disciplinaCC, disciplinaEM, disciplinaEQ, disciplinaTA, disciplinaTI, disciplinaTM;
+
     public static void main(String[] args) {
         SpringApplication.run(AgApplication.class, args);
 
         String caminhoArquivoCC = "src/main/resources/planilhas/Curso_CienciaComputacao.xlsx";
-        List<Disciplina> disciplinaCC = FileReaderService.lerHorarios(caminhoArquivoCC);
-        //int[] vetorCC = generateRandomPositionsForClassCode(disciplinaCC, "cc");
+        disciplinaCC = FileReaderService.lerHorarios(caminhoArquivoCC);
+        int[] vetorCC = generateRandomPositionsForClassCode(disciplinaCC, "cc");
 
         String caminhoArquivoEM = "src/main/resources/planilhas/Curso_EngenhariaMecanica_Matutino.xlsx";
-        List<Disciplina> disciplinaEM = FileReaderService.lerHorarios(caminhoArquivoEM);
-        //int[] vetorEM = generateRandomPositionsForClassCode(disciplinaEM, true, "em");
+        disciplinaEM = FileReaderService.lerHorarios(caminhoArquivoEM);
+        int[] vetorEM = generateRandomPositionsForClassCode(disciplinaEM, "em");
 
         String caminhoArquivoEQ = "src/main/resources/planilhas/Curso_EngenhariaQuimica_Matutino.xlsx";
-        List<Disciplina> disciplinaEQ = FileReaderService.lerHorarios(caminhoArquivoEQ);
+        disciplinaEQ = FileReaderService.lerHorarios(caminhoArquivoEQ);
         //int[] vetorEQ = generateRandomPositionsForClassCode(disciplinaEQ, true, "eq");
 
         String caminhoArquivoTA = "src/main/resources/planilhas/Curso_TecnicoAdministracaoVespertino_aula3a6a.xlsx";
-        List<Disciplina> disciplinaTA = FileReaderService.lerHorarios(caminhoArquivoTA);
+        disciplinaTA = FileReaderService.lerHorarios(caminhoArquivoTA);
         //int[] vetorTA = generateRandomPositionsForClassCode(disciplinaTA, true, "ta");
 
         String caminhoArquivoTI = "src/main/resources/planilhas/Curso_TecnicoInformaticaParaInternet_Vespertino_aula3a6a.xlsx";
-        List<Disciplina> disciplinaTI = FileReaderService.lerHorarios(caminhoArquivoTI);
+        disciplinaTI = FileReaderService.lerHorarios(caminhoArquivoTI);
         //int[] vetorTI = generateRandomPositionsForClassCode(disciplinaTI, true, "ti");
 
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
-        List<Disciplina> disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
-        int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
-
+        disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
+        //int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
+        fitnessBetweenCourses();
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
@@ -66,8 +65,7 @@ public class AgApplication {
             contarFases.put(fase, contarFases.getOrDefault(fase, 0) + 1);
             codigosDeAula.add(d.getCodigo());
         }
-
-        cromossomos = generateCromossomeSize(5, contarFases.size());
+        cromossomos = generateCromossomeSize(5, 4);
         vetorTurmaCodigo = new int[cromossomos];
         generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso);
 
@@ -131,6 +129,7 @@ public class AgApplication {
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
 
         fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
+
         for (int i = 0; i < fitnessWorkLoad.size(); i++) {
             switch (curso) {
                 case "cc": {
@@ -164,6 +163,8 @@ public class AgApplication {
     }
 
     public static ArrayList fitnessWorkLoadFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Integer> intervalosCodigosDeAula) {
+        //Fitness: verifica se as disciplinas estão batendo a carga horária
+
         int pontuacao = 1000;
         ArrayList fitness = new ArrayList();
         ArrayList codLidos = new ArrayList();
@@ -210,11 +211,13 @@ public class AgApplication {
             contadorPadding = 0;
 
         }
-        System.out.println(fitness);
+        //System.out.println(fitness);
         return fitness;
     }
 
     public static ArrayList fitnessProfessorAvaiabilityFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Professor> disponibilidadeProfessores) {
+        //Fitness: verifica se um professor pode realmente dar aula naquele dia
+
         int desconto = 0;
         ArrayList descontos = new ArrayList();
         List<String> dias = new ArrayList<>(List.of("Segunda", "Terca", "Quarta", "Quinta", "Sexta"));
@@ -251,53 +254,67 @@ public class AgApplication {
             desconto = 0;
 
         }
-        System.out.println(descontos);
+        //System.out.println(descontos);
         return descontos;
     }
 
-    public static ArrayList fitnessBetweenCourses(List<Disciplina> listaAtual) {
-        if (leuCC && leuEQ && leuEM && leuTA && leuTI && leuTM) {
-            //TODO: LOGICA DO FITNESS DOS CURSOS
-            for (int i = 0; i < matrizCC.length; i++) {
-                for (int j = 0; j < matrizCC[0].length; j++) {
-                    int codigoCC = matrizCC[i][j];
-                    int codigoEM = matrizEM[i][j];
-                    int codigoEQ = matrizEQ[i][j];
-                    int codigoTA = matrizTA[i][j];
-                    int codigoTI = matrizTI[i][j];
-                    int codigoTM = matrizTM[i][j];
-                    String nomeCC = findProfessorName(codigoCC, listaAtual);
-                    String nomeEM = findProfessorName(codigoEM, listaAtual);
-                    String nomeEQ = findProfessorName(codigoEQ, listaAtual);
-                    String nomeTA = findProfessorName(codigoTA, listaAtual);
-                    String nomeTI = findProfessorName(codigoTI, listaAtual);
-                    String nomeTM = findProfessorName(codigoTM, listaAtual);
-                   
-                    if (nomeCC.equals(nomeEM)) {
-                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
-                        fitnessEM.set(i, (int)fitnessEM.get(i)-10);
-                    }
-                    if (nomeCC.equals(nomeEQ)) {
-                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
-                        fitnessEQ.set(i, (int)fitnessEQ.get(i)-10);
-                    }
-                    if (nomeCC.equals(nomeTA)) {
-                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
-                        fitnessTA.set(i, (int)fitnessTA.get(i)-10);
-                    }
-                    if (nomeCC.equals(nomeTI)) {
-                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
-                        fitnessTI.set(i, (int)fitnessTI.get(i)-10);
-                    }
-                    if (nomeCC.equals(nomeTM)) {
-                        fitnessCC.set(i, (int)fitnessCC.get(i)-10);
-                        fitnessTM.set(i, (int)fitnessTM.get(i)-10);
-                    }
+    public static void fitnessBetweenCourses() {
+        //Fitness: verifica se um professor não está dando aula em outra turma
+        System.out.println("Fitness CC: " + fitnessCC);
+        System.out.println("-----------------------------");
+        System.out.println(Arrays.toString(matrizCC[0]));
+        System.out.println(Arrays.toString(matrizEM[0]));
+        int desconto = 0;
+        //faz um 'for' do tamanho das matrizes para a comparação
+        for (int i = 0; i < 1; i++) {
+            for (int j = 0; j < matrizCC[0].length; j++) {
+                //pega todos os códigos das aulas referente aos cursos
+                int codigoCC = matrizCC[i][j];
+                int codigoEM = matrizEM[i][j];
+                /*int codigoEQ = matrizEQ[i][j];
+                int codigoTA = matrizTA[i][j];
+                int codigoTI = matrizTI[i][j];
+                int codigoTM = matrizTM[i][j];*/
+
+                //acha o professor responsável por aquela aula
+                String nomeCC = findProfessorName(codigoCC, disciplinaCC);
+                String nomeEM = findProfessorName(codigoEM, disciplinaEM);
+                System.out.println(nomeCC + " x " + nomeEM);
+                System.out.println(codigoCC + " x " + codigoEM);
+                /*String nomeEQ = findProfessorName(codigoEQ, disciplinaEQ);
+                String nomeTA = findProfessorName(codigoTA, disciplinaTA);
+                String nomeTI = findProfessorName(codigoTI, disciplinaTI);
+                String nomeTM = findProfessorName(codigoTM, disciplinaTM);*/
+
+                //verificações curso graduação
+                if (nomeCC.equals(nomeEM)) {
+                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
                 }
+                /*if (nomeCC.equals(nomeEQ)) {
+                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
+                }
+                if (nomeEQ.equals(nomeEM)) {
+                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
+                }
+                //verificações curso técnico
+                if (nomeTA.equals(nomeTI)) {
+                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
+                }
+                if (nomeTA.equals(nomeTM)) {
+                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
+                }
+                if (nomeTI.equals(nomeTM)) {
+                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
+                }*/
             }
         }
-
-        return null;
+        System.out.println("Fitness CC: " + fitnessCC);
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
