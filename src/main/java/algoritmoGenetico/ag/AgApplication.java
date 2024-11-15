@@ -51,6 +51,7 @@ public class AgApplication {
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
         int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
+
         fitnessBetweenCourses();
     }
 
@@ -86,7 +87,7 @@ public class AgApplication {
 
         int contador = 0, contadorPeriodo = 1;
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < chaves.size(); i++) {
             int valorAtual = valores.get(i);
 
             // Define os limites para randomização (pegar a partir de acordo com os códigos das fases)
@@ -127,21 +128,23 @@ public class AgApplication {
         String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
 
-        fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
-
+        fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);        
         for (int i = 0; i < fitnessWorkLoad.size(); i++) {
             switch (curso) {
                 case "cc": {
                     fitnessCC.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizCC = matrizCromossomo;
+                    break;
                 }
                 case "em": {
                     fitnessEM.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizEM = matrizCromossomo;
+                    break;
                 }
                 case "eq": {
                     fitnessEQ.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizEQ = matrizCromossomo;
+                    break;
                 }
                 case "ta": {
                     fitnessTA.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
@@ -150,18 +153,24 @@ public class AgApplication {
                 case "ti": {
                     fitnessTI.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizTI = matrizCromossomo;
+                    break;
                 }
                 case "tm": {
                     fitnessTM.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizTM = matrizCromossomo;
+                    break;
                 }
             }
         }
-
         return matrizCromossomo;
     }
 
-    public static ArrayList fitnessWorkLoadFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Integer> intervalosCodigosDeAula) {
+    public static ArrayList fitnessWorkLoadFunction(
+            int[][] matrizCromossomo,
+            String curso,
+            List<Disciplina> listaAtual,
+            List<Integer> intervalosCodigosDeAula
+    ) {
         //Fitness: verifica se as disciplinas estão batendo a carga horária
 
         int pontuacao = 1000;
@@ -197,7 +206,7 @@ public class AgApplication {
 
                     if (contadorPadding % 10 == 0) {
 //                            System.out.println("APAGUEI O VETOR");
-                        int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao);
+                        int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao, curso);
                         contRepeticao++;
                         pontuacao = novaPontuacao;
                         codLidos.clear();
@@ -208,13 +217,18 @@ public class AgApplication {
             pontuacao = 1000;
             contRepeticao = 0;
             contadorPadding = 0;
-
+            
         }
         //System.out.println(fitness);
         return fitness;
     }
 
-    public static ArrayList fitnessProfessorAvaiabilityFunction(int[][] matrizCromossomo, String curso, List<Disciplina> listaAtual, List<Professor> disponibilidadeProfessores) {
+    public static ArrayList fitnessProfessorAvaiabilityFunction(
+            int[][] matrizCromossomo,
+            String curso,
+            List<Disciplina> listaAtual,
+            List<Professor> disponibilidadeProfessores
+    ) {
         //Fitness: verifica se um professor pode realmente dar aula naquele dia
 
         int desconto = 0;
@@ -238,7 +252,7 @@ public class AgApplication {
                         //System.out.println("Dias indisponíveis: " + indisponibilidadeProfessor.get(i).toString());
                         //System.out.println("Data pra ser marcado: " + dias.get(contDias));
                         if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
-                            //System.out.println("DIA ENCONTRADO PORRA: " + indisponibilidadeProfessor.get(i).toString());
+                           //System.out.println("DIA ENCONTRADO PORRA: " + indisponibilidadeProfessor.get(i).toString());
                             desconto += 10;
                             break;
                         }
@@ -259,15 +273,15 @@ public class AgApplication {
 
     public static void fitnessBetweenCourses() {
         //Fitness: verifica se um professor não está dando aula em outra turma
-        System.out.println("ANTES: " + fitnessCC);
+        /*System.out.println("ANTES: " + fitnessCC);
         System.out.println("ANTES: " + fitnessEM);
         System.out.println("ANTES: " + fitnessEQ);
         System.out.println("ANTES: " + fitnessTA);
         System.out.println("ANTES: " + fitnessTI);
-        System.out.println("ANTES: " + fitnessTM);
+        System.out.println("ANTES: " + fitnessTM);*/
         //faz um 'for' do tamanho das matrizes para a comparação
         for (int i = 0; i < matrizCC.length; i++) {
-            System.out.println("--------------------");
+            //System.out.println("--------------------");
             for (int j = 0; j < matrizCC[0].length; j++) {
                 //pega todos os códigos das aulas referente aos cursos
                 int codigoCC = matrizCC[i][j];
@@ -297,30 +311,34 @@ public class AgApplication {
                     fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
                 }
                 if (nomeEQ.equals(nomeEM)) {
-                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
-                    fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
+                    fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
+                    fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
                 }
                 //verificações curso técnico
                 if (nomeTA.equals(nomeTI)) {
-                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
                     fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
                 }
                 if (nomeTA.equals(nomeTM)) {
-                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
                     fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
                 }
                 if (nomeTI.equals(nomeTM)) {
-                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                    fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
                     fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
                 }
             }
         }
-        System.out.println("DEPOIS: " + fitnessCC);
+        /*System.out.println("DEPOIS: " + fitnessCC);
         System.out.println("DEPOIS: " + fitnessEM);
         System.out.println("DEPOIS: " + fitnessEQ);
         System.out.println("DEPOIS: " + fitnessTA);
         System.out.println("DEPOIS: " + fitnessTI);
-        System.out.println("DEPOIS: " + fitnessTM);
+        System.out.println("DEPOIS: " + fitnessTM);*/
+    }
+    
+    public static void crossingChromossomes(int cromossomosElitismo, int probabilidadeCruzamento){
+        
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
@@ -381,7 +399,7 @@ public class AgApplication {
         return diasIndisponiveis;
     }
 
-    public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao, int nRepeticao) {
+    public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao, int nRepeticao, String curso) {
         int inicioLido = 0;
         int finalLido = 0;
         if (nRepeticao == 0) {
@@ -395,7 +413,10 @@ public class AgApplication {
                 x = i;
             }
             inicioLido += 1;
-            finalLido += intervalosCodigosDeAula.get(x + 1);
+            if (!(curso.equals("eq") && nRepeticao == 3)) {
+                finalLido += intervalosCodigosDeAula.get(x + 1);
+            }
+
         }
 
         Set<Integer> esperado = new HashSet<>();
