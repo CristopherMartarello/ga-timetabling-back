@@ -55,7 +55,7 @@ public class AgApplication {
         int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
 
         fitnessBetweenCourses();
-        crossingChromossomes(2, 50, matrizCC, fitnessCC);
+        crossingChromossomes(2, 70, matrizCC, fitnessCC);
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
@@ -376,7 +376,7 @@ public class AgApplication {
 
         ArrayList fitnessAbsoluto = new ArrayList();
         fitnessAbsoluto = totalFitness(fitness);
-        rouletteMethod(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosElitismo);
+        rouletteMethod(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosElitismo, probabilidadeCruzamento);
     }
 
     public static void mutatingChromossomes(
@@ -402,48 +402,89 @@ public class AgApplication {
             int[][] matrizCromossomo,
             ArrayList<Integer> fitnessAbsoluto,
             Map<Integer, int[]> cromossomosSelecionados,
-            int cromossomosElitismo
+            int cromossomosElitismo,
+            int probabilidadeCruzamento
     ) {
         // 1. Calculando o fitness acumulado
         ArrayList<Integer> acumulado = totalFitness(fitnessAbsoluto);
 
-        // 2. Preparar a lista para armazenar os casais (deve ser uma lista de arrays de cromossomos)
-        List<int[][]> casais = new ArrayList<>();
+        // 2. Preparar a lista para armazenar a nova geração após o cruzamento
+        List<int[]> novaGeracao = new ArrayList<>();
 
         // 3. Criar um set para armazenar os índices dos cromossomos já selecionados
         Set<Integer> cromossomosUsados = new HashSet<>();
 
-        // 4. Formar todos os casais (metade do tamanho da população - elitismo)
-        while (casais.size() < (matrizCromossomo.length-cromossomosElitismo) / 2) {
-            // Selecionar o primeiro pai
+        // 4. Adicionar os cromossomos elitistas diretamente à nova geração
+        // Lembre-se que os cromossomos elitistas são selecionados previamente no processo
+        for (Map.Entry<Integer, int[]> entry : cromossomosSelecionados.entrySet()) {
+            novaGeracao.add(entry.getValue()); // Adicionando cromossomos elitistas à nova geração
+        }
+
+        // 5. Formar todos os casais (metade do tamanho da população - elitismo)
+        while (novaGeracao.size() < matrizCromossomo.length) {
+            
             int[] pai1 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
 
-            // Selecionar o segundo pai
             int[] pai2 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
 
-            // Garantir que o segundo pai não seja o mesmo que o primeiro
             while (Arrays.equals(pai1, pai2)) {
                 pai2 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
             }
 
-            // Adicionar o par de pais ao vetor de casais
-            int[][] casal = new int[2][];
-            casal[0] = pai1; // Adiciona o primeiro pai na primeira linha
-            casal[1] = pai2; // Adiciona o segundo pai na segunda linha
+            Random rand = new Random();
+            int numeroSorteado = rand.nextInt(100) + 1;
 
-            // Adicionar o par de pais (matriz 2xN) à lista de casais
-            casais.add(casal);
+            if (numeroSorteado <= probabilidadeCruzamento) {
+                int[][] filhos = crossover(pai1, pai2);
+                
+                // Nova geração
+                novaGeracao.add(filhos[0]); 
+                novaGeracao.add(filhos[1]);
+            } else {
+                System.out.println("NÃO HOUVE CRUZAMENTO");
+                novaGeracao.add(pai1); 
+                novaGeracao.add(pai2);
+            }
 
             // Adicionar os índices dos cromossomos usados ao set
             cromossomosUsados.add(Arrays.hashCode(pai1)); // Usa hashCode para garantir unicidade no set
             cromossomosUsados.add(Arrays.hashCode(pai2)); // Usa hashCode para garantir unicidade no set
         }
 
-        // Exibir os casais formados
-        System.out.println("Casais formados: ");
-        for (int[][] casal : casais) {
-            System.out.println("Pai 1: " + Arrays.toString(casal[0]) + "\n | Pai 2: " + Arrays.toString(casal[1]));
+        System.out.println("Nova geração: ");
+        for (int[] cromossomo : novaGeracao) {
+            System.out.println(Arrays.toString(cromossomo));
         }
+    }
+
+    private static int[][] crossover(int[] pai1, int[] pai2) {
+        
+        Random rand = new Random();
+        int pontoCrossover = rand.nextInt(pai1.length); // Ponto aleatório entre 0 e o comprimento do cromossomo
+        System.out.println("CORTE " + pontoCrossover);
+
+        int[] filho1 = new int[pai1.length];
+        int[] filho2 = new int[pai2.length];
+
+        // O filho 1 recebe a parte do pai1 até o ponto de crossover e a parte do pai2 após o ponto de crossover
+        System.arraycopy(pai1, 0, filho1, 0, pontoCrossover);
+        System.arraycopy(pai2, pontoCrossover, filho1, pontoCrossover, pai2.length - pontoCrossover);
+
+        // O filho 2 recebe a parte do pai2 até o ponto de crossover e a parte do pai1 após o ponto de crossover
+        System.arraycopy(pai2, 0, filho2, 0, pontoCrossover);
+        System.arraycopy(pai1, pontoCrossover, filho2, pontoCrossover, pai1.length - pontoCrossover);
+
+        int[][] filhos = new int[2][];
+        filhos[0] = filho1;
+        filhos[1] = filho2;
+        
+        System.out.println("PAI 1 " + Arrays.toString(pai1));
+        System.out.println("PAI 2 " + Arrays.toString(pai2));
+        System.out.println("=================================");
+        System.out.println("FILHO 1 " + Arrays.toString(filho1));
+        System.out.println("FILHO 2 " + Arrays.toString(filho2));
+
+        return filhos;
     }
 
     private static int[] selectChromossomeByRoulette(int[][] matrizCromossomo, ArrayList<Integer> acumulado, Map<Integer, int[]> cromossomosSelecionados, Set<Integer> cromossomosUsados) {
@@ -466,7 +507,6 @@ public class AgApplication {
 
         return matrizCromossomo[matrizCromossomo.length - 1];
     }
-
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
         int cargaHoraria = 0;
