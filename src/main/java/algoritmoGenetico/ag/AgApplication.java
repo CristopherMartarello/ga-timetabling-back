@@ -343,12 +343,31 @@ public class AgApplication {
     }
 
     public static void crossingChromossomes(
-            int cromossomosElitismo, 
-            int probabilidadeCruzamento, 
-            int[][] matrizCurso, 
+            int cromossomosElitismo,
+            int probabilidadeCruzamento,
+            int[][] matrizCurso,
             ArrayList fitness
     ) {
-        
+
+    }
+
+    public static void mutatingChromossomes(
+            int probabilidadeMutacao,
+            int[][] matrizCurso
+    ) {
+
+    }
+
+    public static ArrayList<Integer> totalFitness(ArrayList fitness) {
+        ArrayList<Integer> acumulado = new ArrayList<>();
+        int soma = 0;
+
+        for (Object valor : fitness) {
+            soma += (Integer) valor;
+            acumulado.add(soma);
+        }
+
+        return acumulado;
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
