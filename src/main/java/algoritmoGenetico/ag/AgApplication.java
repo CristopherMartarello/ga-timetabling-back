@@ -128,7 +128,7 @@ public class AgApplication {
         String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
 
-        fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);        
+        fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
         for (int i = 0; i < fitnessWorkLoad.size(); i++) {
             switch (curso) {
                 case "cc": {
@@ -149,6 +149,7 @@ public class AgApplication {
                 case "ta": {
                     fitnessTA.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizTA = matrizCromossomo;
+                    break;
                 }
                 case "ti": {
                     fitnessTI.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
@@ -217,7 +218,7 @@ public class AgApplication {
             pontuacao = 1000;
             contRepeticao = 0;
             contadorPadding = 0;
-            
+
         }
         //System.out.println(fitness);
         return fitness;
@@ -252,7 +253,7 @@ public class AgApplication {
                         //System.out.println("Dias indisponíveis: " + indisponibilidadeProfessor.get(i).toString());
                         //System.out.println("Data pra ser marcado: " + dias.get(contDias));
                         if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
-                           //System.out.println("DIA ENCONTRADO PORRA: " + indisponibilidadeProfessor.get(i).toString());
+                            //System.out.println("DIA ENCONTRADO PORRA: " + indisponibilidadeProfessor.get(i).toString());
                             desconto += 10;
                             break;
                         }
@@ -314,19 +315,23 @@ public class AgApplication {
                     fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
                     fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
                 }
-                //verificações curso técnico
-                if (nomeTA.equals(nomeTI)) {
-                    fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
-                    fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
+                //verificar se as aulas não forem segunda
+                if (codigoTA != -1 && codigoTI != -1 && codigoTM != -1) {
+                    //verificações curso técnico
+                    if (nomeTA.equals(nomeTI)) {
+                        fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
+                        fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
+                    }
+                    if (nomeTA.equals(nomeTM)) {
+                        fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
+                        fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
+                    }
+                    if (nomeTI.equals(nomeTM)) {
+                        fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
+                        fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
+                    }
                 }
-                if (nomeTA.equals(nomeTM)) {
-                    fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
-                    fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
-                }
-                if (nomeTI.equals(nomeTM)) {
-                    fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
-                    fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
-                }
+
             }
         }
         /*System.out.println("DEPOIS: " + fitnessCC);
@@ -336,8 +341,13 @@ public class AgApplication {
         System.out.println("DEPOIS: " + fitnessTI);
         System.out.println("DEPOIS: " + fitnessTM);*/
     }
-    
-    public static void crossingChromossomes(int cromossomosElitismo, int probabilidadeCruzamento){
+
+    public static void crossingChromossomes(
+            int cromossomosElitismo, 
+            int probabilidadeCruzamento, 
+            int[][] matrizCurso, 
+            ArrayList fitness
+    ) {
         
     }
 
