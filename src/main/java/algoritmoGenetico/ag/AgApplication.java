@@ -53,6 +53,7 @@ public class AgApplication {
         int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
 
         fitnessBetweenCourses();
+        crossingChromossomes(0, 50, matrizCC, fitnessCC);
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
@@ -345,10 +346,12 @@ public class AgApplication {
     public static void crossingChromossomes(
             int cromossomosElitismo,
             int probabilidadeCruzamento,
-            int[][] matrizCurso,
+            int[][] matrizCromossomo,
             ArrayList fitness
     ) {
-
+        ArrayList fitnessAbsoluto = new ArrayList();
+        fitnessAbsoluto = totalFitness(fitness);
+        rouletteMethod(matrizCromossomo, fitnessAbsoluto);
     }
 
     public static void mutatingChromossomes(
@@ -368,6 +371,40 @@ public class AgApplication {
         }
 
         return acumulado;
+    }
+    
+    public static void rouletteMethod(int[][] matrizCromossomo, ArrayList<Integer> fitnessAbsoluto) {
+        // 1. Calculando o fitness acumulado
+        ArrayList<Integer> acumulado = totalFitness(fitnessAbsoluto);
+
+        // 2. Selecionar dois pais pela roleta
+        int[][] paisSelecionados = new int[2][matrizCromossomo[0].length]; 
+
+        // Selecionar o primeiro pai
+        paisSelecionados[0] = selectChromossomeByRoulette(matrizCromossomo, acumulado);
+
+        // Selecionar o segundo pai
+        paisSelecionados[1] = selectChromossomeByRoulette(matrizCromossomo, acumulado);
+
+        System.out.println("Pai 1: ");
+        System.out.println(Arrays.toString(paisSelecionados[0]));
+
+        System.out.println("Pai 2: ");
+        System.out.println(Arrays.toString(paisSelecionados[1]));
+    }
+    
+    private static int[] selectChromossomeByRoulette(int[][] matrizCromossomo, ArrayList<Integer> acumulado) {
+        Random rand = new Random();
+        int pontoSorteado = rand.nextInt(acumulado.get(acumulado.size() - 1));  // Sorteando um ponto na roleta
+
+        // Verificando qual cromossomo corresponde ao ponto sorteado
+        for (int i = 0; i < acumulado.size(); i++) {
+            if (pontoSorteado < acumulado.get(i)) {
+                return matrizCromossomo[i];  // Retorna o cromossomo correspondente ao ponto sorteado
+            }
+        }
+
+        return matrizCromossomo[matrizCromossomo.length - 1];
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
