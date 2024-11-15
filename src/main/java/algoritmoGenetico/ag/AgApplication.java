@@ -2,10 +2,12 @@ package algoritmoGenetico.ag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import model.Disciplina;
@@ -53,7 +55,7 @@ public class AgApplication {
         int[] vetorTM = generateRandomPositionsForClassCode(disciplinaTM, "tm");
 
         fitnessBetweenCourses();
-        crossingChromossomes(0, 50, matrizCC, fitnessCC);
+        crossingChromossomes(2, 50, matrizCC, fitnessCC);
     }
 
     public static int[] generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
@@ -349,9 +351,32 @@ public class AgApplication {
             int[][] matrizCromossomo,
             ArrayList fitness
     ) {
+        Map<Integer, int[]> cromossomosSelecionados = new HashMap<>();
+
+        ArrayList<Integer> fitnessOrdenado = new ArrayList<>(fitness);
+        Collections.sort(fitnessOrdenado, Collections.reverseOrder());
+
+        Set<Integer> indicesSelecionados = new HashSet<>();
+        int cromossomosSelecionadosCount = 0;
+
+        for (int i = 0; cromossomosSelecionadosCount < cromossomosElitismo && i < fitnessOrdenado.size(); i++) {
+            int valorFitness = fitnessOrdenado.get(i);
+
+            // Encontrar todos os índices com esse valor de fitness
+            for (int k = 0; k < fitness.size(); k++) {
+                if (fitness.get(k).equals(valorFitness) && !indicesSelecionados.contains(k)) {
+                    // Se ainda não foi selecionado, adiciona
+                    indicesSelecionados.add(k);
+                    cromossomosSelecionados.put(k, matrizCromossomo[k]);
+                    cromossomosSelecionadosCount++;
+                    break;  // Stop, move to next elitism selection
+                }
+            }
+        }
+
         ArrayList fitnessAbsoluto = new ArrayList();
         fitnessAbsoluto = totalFitness(fitness);
-        rouletteMethod(matrizCromossomo, fitnessAbsoluto);
+        rouletteMethod(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosElitismo);
     }
 
     public static void mutatingChromossomes(
@@ -372,40 +397,76 @@ public class AgApplication {
 
         return acumulado;
     }
-    
-    public static void rouletteMethod(int[][] matrizCromossomo, ArrayList<Integer> fitnessAbsoluto) {
+
+    public static void rouletteMethod(
+            int[][] matrizCromossomo,
+            ArrayList<Integer> fitnessAbsoluto,
+            Map<Integer, int[]> cromossomosSelecionados,
+            int cromossomosElitismo
+    ) {
         // 1. Calculando o fitness acumulado
         ArrayList<Integer> acumulado = totalFitness(fitnessAbsoluto);
 
-        // 2. Selecionar dois pais pela roleta
-        int[][] paisSelecionados = new int[2][matrizCromossomo[0].length]; 
+        // 2. Preparar a lista para armazenar os casais (deve ser uma lista de arrays de cromossomos)
+        List<int[][]> casais = new ArrayList<>();
 
-        // Selecionar o primeiro pai
-        paisSelecionados[0] = selectChromossomeByRoulette(matrizCromossomo, acumulado);
+        // 3. Criar um set para armazenar os índices dos cromossomos já selecionados
+        Set<Integer> cromossomosUsados = new HashSet<>();
 
-        // Selecionar o segundo pai
-        paisSelecionados[1] = selectChromossomeByRoulette(matrizCromossomo, acumulado);
+        // 4. Formar todos os casais (metade do tamanho da população - elitismo)
+        while (casais.size() < (matrizCromossomo.length-cromossomosElitismo) / 2) {
+            // Selecionar o primeiro pai
+            int[] pai1 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
 
-        System.out.println("Pai 1: ");
-        System.out.println(Arrays.toString(paisSelecionados[0]));
+            // Selecionar o segundo pai
+            int[] pai2 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
 
-        System.out.println("Pai 2: ");
-        System.out.println(Arrays.toString(paisSelecionados[1]));
+            // Garantir que o segundo pai não seja o mesmo que o primeiro
+            while (Arrays.equals(pai1, pai2)) {
+                pai2 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
+            }
+
+            // Adicionar o par de pais ao vetor de casais
+            int[][] casal = new int[2][];
+            casal[0] = pai1; // Adiciona o primeiro pai na primeira linha
+            casal[1] = pai2; // Adiciona o segundo pai na segunda linha
+
+            // Adicionar o par de pais (matriz 2xN) à lista de casais
+            casais.add(casal);
+
+            // Adicionar os índices dos cromossomos usados ao set
+            cromossomosUsados.add(Arrays.hashCode(pai1)); // Usa hashCode para garantir unicidade no set
+            cromossomosUsados.add(Arrays.hashCode(pai2)); // Usa hashCode para garantir unicidade no set
+        }
+
+        // Exibir os casais formados
+        System.out.println("Casais formados: ");
+        for (int[][] casal : casais) {
+            System.out.println("Pai 1: " + Arrays.toString(casal[0]) + "\n | Pai 2: " + Arrays.toString(casal[1]));
+        }
     }
-    
-    private static int[] selectChromossomeByRoulette(int[][] matrizCromossomo, ArrayList<Integer> acumulado) {
+
+    private static int[] selectChromossomeByRoulette(int[][] matrizCromossomo, ArrayList<Integer> acumulado, Map<Integer, int[]> cromossomosSelecionados, Set<Integer> cromossomosUsados) {
         Random rand = new Random();
         int pontoSorteado = rand.nextInt(acumulado.get(acumulado.size() - 1));  // Sorteando um ponto na roleta
 
         // Verificando qual cromossomo corresponde ao ponto sorteado
         for (int i = 0; i < acumulado.size(); i++) {
+            // Verificar se o cromossomo foi selecionado por elitismo ou já foi utilizado
             if (pontoSorteado < acumulado.get(i)) {
-                return matrizCromossomo[i];  // Retorna o cromossomo correspondente ao ponto sorteado
+                if (!cromossomosSelecionados.containsKey(i) && !cromossomosUsados.contains(i)) {
+                    cromossomosUsados.add(i); // Adiciona o índice ao set para garantir que não se repita
+                    return matrizCromossomo[i];  // Retorna o cromossomo correspondente ao ponto sorteado
+                } else {
+                    // Se o cromossomo já foi elitista ou já foi usado, tenta outro ponto na roleta
+                    return selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
+                }
             }
         }
 
         return matrizCromossomo[matrizCromossomo.length - 1];
     }
+
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
         int cargaHoraria = 0;
