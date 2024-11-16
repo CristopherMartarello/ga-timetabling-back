@@ -38,7 +38,7 @@ public class Controller implements WebMvcConfigurer{
         System.out.println("Chegou");  // Isso é apenas para verificar se os dados estão chegando
         // Processa os dados recebidos
         System.out.println("Probabilidade de Cruzamento: " + config.getProbabilidadeCruzamento());
-        System.out.println("Mutação: " + config.getMutacao());
+        System.out.println("Mutação: " + config.getProbabilidadeMutacao());
         System.out.println("Qtd. Elitismo: " + config.getQtdElitismo());
         System.out.println("Iterações: " + config.getIteracoes());
         System.out.println("Iterações sem Melhoria: " + config.getIteracoesSemMelhoria());

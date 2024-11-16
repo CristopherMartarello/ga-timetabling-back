@@ -3,7 +3,7 @@ package DTO;
 
 public class GeneticConfigDTO {
     private Integer probabilidadeCruzamento;
-    private Integer mutacao;
+    private Integer probabilidadeMutacao;
     private Integer qtdElitismo;
     private Integer iteracoes;
     private Integer iteracoesSemMelhoria;
@@ -17,12 +17,12 @@ public class GeneticConfigDTO {
         this.probabilidadeCruzamento = probabilidadeCruzamento;
     }
 
-    public Integer getMutacao() {
-        return mutacao;
+    public Integer getProbabilidadeMutacao() {
+        return probabilidadeMutacao;
     }
 
-    public void setMutacao(Integer mutacao) {
-        this.mutacao = mutacao;
+    public void setProbabilidadeMutacao(Integer probabilidadeMutacao) {
+        this.probabilidadeMutacao = probabilidadeMutacao;
     }
 
     public Integer getQtdElitismo() {
