@@ -16,9 +16,11 @@ import model.Disciplina;
 import model.Professor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import service.FileReaderService;
 
 @SpringBootApplication
+@ComponentScan(basePackages="controller")
 public class AgApplication {
 
     public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),

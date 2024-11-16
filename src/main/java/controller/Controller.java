@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +33,8 @@ public class Controller implements WebMvcConfigurer{
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowCredentials(true);
     }
-
+    
+    
     @PostMapping("/configure")  // Este mapeamento é para o endpoint /api/configure
     public ResponseEntity<String> configureAlgorithm(@Valid @RequestBody GeneticConfigDTO config) {
         System.out.println("Chegou");  // Isso é apenas para verificar se os dados estão chegando
