@@ -1,5 +1,7 @@
 package algoritmoGenetico.ag;
 
+import DTO.GeneticConfigDTO;
+import DTO.ScheduleResultDTO;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,7 +88,7 @@ public class AgApplication {
 
         String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
-        
+
         fitnessCC = fitnessWorkLoadFunction(matrizCC, "CC",
                 disciplinaCC, intervalosCodigosDeAulaCC);
         descontosCC = fitnessProfessorAvaiabilityFunction(matrizCC, "CC",
@@ -127,8 +129,7 @@ public class AgApplication {
         }
 
         fitnessBetweenCourses();
-        
-        
+
     }
 
     public static void generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
@@ -739,4 +740,29 @@ public class AgApplication {
         return pontuacao;
     }
 
+    /*public static String initializeAndRunAlgorithm(GeneticConfigDTO config) {
+        // Configura os parâmetros do algoritmo 
+        this.probabilidadeCruzamento = config.getProbabilidadeCruzamento();
+        this.mutacao = config.getMutacao();
+        this.qtdElitismo = config.getQtdElitismo();
+        this.iteracoes = config.getIteracoes();
+        this.iteracoesSemMelhoria = config.getIteracoesSemMelhoria();
+        // Agora executa o algoritmo genético com esses parâmetros 
+        // Isso pode envolver várias etapas, como inicialização de população, cruzamento, mutação, etc. 
+        return runAlgorithm();
+    }
+    // Método que executa o algoritmo genético 
+
+    private static String runAlgorithm() {
+        // Lógica do algoritmo genético aqui. 
+        // Exemplo de resposta, isso deve ser substituído pela lógica real do AG. 
+        ScheduleResultDTO result = new ScheduleResultDTO();
+        result.setFitnessScore(85.7);
+        // Exemplo de pontuação 
+        result.setBestSolution(List.of(1, 0, 1, 1, 0));
+        // Exemplo de melhor solução 
+        result.setIterations(100);
+        // Exemplo de iterações feitas 
+        return result;
+    }*/
 }
