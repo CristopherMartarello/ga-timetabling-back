@@ -5,6 +5,7 @@ package controller;
  * @author Nathan
  */
 import DTO.GeneticConfigDTO;
+import DTO.ScheduleResultDTO;
 import algoritmoGenetico.ag.AgApplication;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +20,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @RestController
-@RequestMapping("/api")  // A URL base será /api
-public class Controller implements WebMvcConfigurer{
-
-    @Autowired
-    private AgApplication algoritmo;
+@RequestMapping("/api")
+public class Controller implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -34,27 +32,19 @@ public class Controller implements WebMvcConfigurer{
     }
 
     @PostMapping("/configure")  // Este mapeamento é para o endpoint /api/configure
-    public ResponseEntity<String> configureAlgorithm(@Valid @RequestBody GeneticConfigDTO config) {
-        System.out.println("Chegou");  // Isso é apenas para verificar se os dados estão chegando
+    public ResponseEntity<ScheduleResultDTO> configureAlgorithm(@Valid @RequestBody GeneticConfigDTO config) {
         // Processa os dados recebidos
         System.out.println("Probabilidade de Cruzamento: " + config.getProbabilidadeCruzamento());
         System.out.println("Mutação: " + config.getProbabilidadeMutacao());
         System.out.println("Qtd. Elitismo: " + config.getQtdElitismo());
         System.out.println("Iterações: " + config.getIteracoes());
         System.out.println("Iterações sem Melhoria: " + config.getIteracoesSemMelhoria());
-
+        System.out.println("Calculando...");
         // Aqui você pode chamar métodos para configurar ou executar o algoritmo
-        // algoritmo.configure(config);
-        
-        return ResponseEntity.ok("Configuração salva com sucesso!");
+        ScheduleResultDTO result = AgApplication.initializeMain(config);
+        System.out.println("Enviando...");
+
+        return ResponseEntity.ok(result);
     }
 
-   /* @PostMapping("/generate-schedule")
-    public ResponseEntity<ScheduleResultDTO> generateSchedule(@RequestBody GeneticConfigDTO config) {
-        ScheduleResultDTO result = algoritmo.initializeAndRunAlgorithm(config);
-        
-        // Retorna o resultado gerado pelo algoritmo genético
-        return ResponseEntity.ok(result);
-    }*/
 }
-

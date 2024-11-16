@@ -9,127 +9,49 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import model.Disciplina;
+import model.ObjetoTabela;
 import model.Professor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import service.FileReaderService;
 
 @SpringBootApplication
+@ComponentScan(basePackages = "controller")
 public class AgApplication {
 
+    //Variaveis recebidas pelo front
+    public static int probabilidadeCruzamentoFront, probabilidadeMutacaoFront, qtdElitismoFront,
+            iteracoesFront, iteracoesSemMelhoriaFront;
+
+    //Variaveis do fitness para cada curso
     public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),
             fitnessTA = new ArrayList(), fitnessTI = new ArrayList(), fitnessTM = new ArrayList();
 
+    //Variaveis da matriz de cada curso
     public static int[][] matrizCC = new int[20][40], matrizEM = new int[20][40], matrizEQ = new int[20][40],
             matrizTA = new int[20][40], matrizTI = new int[20][40], matrizTM = new int[20][40];
 
+    //Variaveis do melhor cromossomo da matriz de cada curso
+    public static int[] bestChromossomeCC = new int[40], bestChromossomeEM = new int[40], bestChromossomeEQ = new int[40],
+            bestChromossomeTA = new int[40], bestChromossomeTI = new int[40], bestChromossomeTM = new int[40];
+
+    //Variaveis do melhor fitness de cada curso
+    public static int bestFitnessCC = 0, bestFitnessEM = 0, bestFitnessEQ = 0,
+            bestFitnessTA = 0, bestFitnessTI = 0, bestFitnessTM = 0;
+
+    //Variaveis dos arquivos lidos da disciplina
     public static List<Disciplina> disciplinaCC, disciplinaEM, disciplinaEQ, disciplinaTA, disciplinaTI, disciplinaTM;
 
+    //Variaveis que vai conter a quantidade de matéria em cada fase dos cursos
     public static List<Integer> intervalosCodigosDeAulaCC, intervalosCodigosDeAulaEM, intervalosCodigosDeAulaEQ,
             intervalosCodigosDeAulaTA, intervalosCodigosDeAulaTI, intervalosCodigosDeAulaTM;
 
     public static void main(String[] args) {
         SpringApplication.run(AgApplication.class, args);
-
-        String caminhoArquivoCC = "src/main/resources/planilhas/Curso_CienciaComputacao.xlsx";
-        disciplinaCC = FileReaderService.lerHorarios(caminhoArquivoCC);
-        generateRandomPositionsForClassCode(disciplinaCC, "CC");
-
-        String caminhoArquivoEM = "src/main/resources/planilhas/Curso_EngenhariaMecanica_Matutino.xlsx";
-        disciplinaEM = FileReaderService.lerHorarios(caminhoArquivoEM);
-        generateRandomPositionsForClassCode(disciplinaEM, "EM");
-
-        String caminhoArquivoEQ = "src/main/resources/planilhas/Curso_EngenhariaQuimica_Matutino.xlsx";
-        disciplinaEQ = FileReaderService.lerHorarios(caminhoArquivoEQ);
-        generateRandomPositionsForClassCode(disciplinaEQ, "EQ");
-
-        String caminhoArquivoTA = "src/main/resources/planilhas/Curso_TecnicoAdministracaoVespertino_aula3a6a.xlsx";
-        disciplinaTA = FileReaderService.lerHorarios(caminhoArquivoTA);
-        generateRandomPositionsForClassCode(disciplinaTA, "TA");
-
-        String caminhoArquivoTI = "src/main/resources/planilhas/Curso_TecnicoInformaticaParaInternet_Vespertino_aula3a6a.xlsx";
-        disciplinaTI = FileReaderService.lerHorarios(caminhoArquivoTI);
-        generateRandomPositionsForClassCode(disciplinaTI, "TI");
-
-        String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
-        disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
-        generateRandomPositionsForClassCode(disciplinaTM, "TM");
-
-        //ultima chamada do fitness
-        fitnessBetweenCourses();
-
-        //processo de cruzamento
-        crossingChromossomes(2, 70, matrizCC, fitnessCC, "CC");
-        crossingChromossomes(2, 70, matrizEQ, fitnessEQ, "EQ");
-        crossingChromossomes(2, 70, matrizEM, fitnessEM, "EM");
-        crossingChromossomes(2, 70, matrizTA, fitnessTA, "TA");
-        crossingChromossomes(2, 70, matrizTI, fitnessTI, "TI");
-        crossingChromossomes(2, 70, matrizTM, fitnessTM, "TM");
-
-        //chamada de método da mutação
-        mutatingChromossomes(10, matrizCC, intervalosCodigosDeAulaCC);
-        mutatingChromossomes(10, matrizEQ, intervalosCodigosDeAulaEQ);
-        mutatingChromossomes(10, matrizEM, intervalosCodigosDeAulaEM);
-        mutatingChromossomes(10, matrizTA, intervalosCodigosDeAulaTA);
-        mutatingChromossomes(10, matrizTI, intervalosCodigosDeAulaTI);
-        mutatingChromossomes(10, matrizTM, intervalosCodigosDeAulaTM);
-
-        //Refazer as chamadas de fitness
-        ArrayList descontosCC = new ArrayList();
-        ArrayList descontosEQ = new ArrayList();
-        ArrayList descontosEM = new ArrayList();
-        ArrayList descontosTA = new ArrayList();
-        ArrayList descontosTI = new ArrayList();
-        ArrayList descontosTM = new ArrayList();
-
-        String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
-        List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
-
-        fitnessCC = fitnessWorkLoadFunction(matrizCC, "CC",
-                disciplinaCC, intervalosCodigosDeAulaCC);
-        descontosCC = fitnessProfessorAvaiabilityFunction(matrizCC, "CC",
-                disciplinaCC, disponibilidadeProfessores);
-
-        fitnessEQ = fitnessWorkLoadFunction(matrizEQ, "EQ",
-                disciplinaEQ, intervalosCodigosDeAulaEQ);
-        descontosEQ = fitnessProfessorAvaiabilityFunction(matrizEQ, "EQ",
-                disciplinaEQ, disponibilidadeProfessores);
-
-        fitnessEM = fitnessWorkLoadFunction(matrizEM, "EM",
-                disciplinaEM, intervalosCodigosDeAulaEM);
-        descontosEM = fitnessProfessorAvaiabilityFunction(matrizEM, "EM",
-                disciplinaEM, disponibilidadeProfessores);
-
-        fitnessTA = fitnessWorkLoadFunction(matrizTA, "TA",
-                disciplinaTA, intervalosCodigosDeAulaTA);
-        descontosTA = fitnessProfessorAvaiabilityFunction(matrizTA, "TA",
-                disciplinaTA, disponibilidadeProfessores);
-
-        fitnessTI = fitnessWorkLoadFunction(matrizTI, "TI",
-                disciplinaTI, intervalosCodigosDeAulaTI);
-        descontosTI = fitnessProfessorAvaiabilityFunction(matrizTI, "TI",
-                disciplinaTI, disponibilidadeProfessores);
-
-        fitnessTM = fitnessWorkLoadFunction(matrizTM, "TM",
-                disciplinaTM, intervalosCodigosDeAulaTM);
-        descontosTM = fitnessProfessorAvaiabilityFunction(matrizTM, "TM",
-                disciplinaTM, disponibilidadeProfessores);
-
-        for (int i = 0; i < fitnessCC.size(); i++) {
-            fitnessCC.set(i, (int) fitnessCC.get(i) - (int) descontosCC.get(i));
-            fitnessEQ.set(i, (int) fitnessEQ.get(i) - (int) descontosEQ.get(i));
-            fitnessEM.set(i, (int) fitnessEM.get(i) - (int) descontosEM.get(i));
-            fitnessTA.set(i, (int) fitnessTA.get(i) - (int) descontosTA.get(i));
-            fitnessTI.set(i, (int) fitnessTI.get(i) - (int) descontosTI.get(i));
-            fitnessTM.set(i, (int) fitnessTM.get(i) - (int) descontosTM.get(i));
-        }
-
-        fitnessBetweenCourses();
-
     }
 
     public static void generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
@@ -513,7 +435,7 @@ public class AgApplication {
             String curso
     ) {
         // 1. Calculando o fitness acumulado
-        ArrayList<Integer> acumulado = totalFitness(fitnessAbsoluto);
+        //ArrayList<Integer> acumulado = totalFitness(fitnessAbsoluto);
 
         // 2. Preparar a lista para armazenar a nova geração após o cruzamento
         List<int[]> novaGeracao = new ArrayList<>();
@@ -530,12 +452,12 @@ public class AgApplication {
         // 5. Formar todos os casais (metade do tamanho da população - elitismo)
         while (novaGeracao.size() < matrizCromossomo.length) {
 
-            int[] pai1 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
+            int[] pai1 = selectChromossomeByRoulette(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosUsados);
 
-            int[] pai2 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
+            int[] pai2 = selectChromossomeByRoulette(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosUsados);
 
             while (Arrays.equals(pai1, pai2)) {
-                pai2 = selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
+                pai2 = selectChromossomeByRoulette(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosUsados);
             }
 
             Random rand = new Random();
@@ -650,12 +572,40 @@ public class AgApplication {
         if (codigo != -1) {
             for (int i = 0; i < listaAtual.size(); i++) {
                 if (codigo == listaAtual.get(i).getCodigo()) {
-                    return listaAtual.get(i).getProfessor();
+                    return listaAtual.get(i).getProfessor();                    
                 }
             }
         }
 
         return "";
+    }
+    
+    public static String[] findClassName(int[] bestChromossome, List<Disciplina> listaAtual){
+        String[] nomeMateria = new String[bestChromossome.length];
+        for (int i = 0; i < bestChromossome.length; i++) {
+            for (int j = 0; j < listaAtual.size(); j++) {
+                if (listaAtual.get(j).getCodigo() == bestChromossome[i]) {
+                    nomeMateria[i] = listaAtual.get(j).getNome();
+                }
+            }
+        }
+        
+        
+        return nomeMateria;
+    }
+    
+    public static String[] findProfessorNameArray(int[] bestChromossome, List<Disciplina> listaAtual) {
+        String[] nomeProfessores = new String[bestChromossome.length];
+        for (int i = 0; i < bestChromossome.length; i++) {
+            for (int j = 0; j < listaAtual.size(); j++) {
+                if (listaAtual.get(j).getCodigo() == bestChromossome[i]) {
+                    nomeProfessores[i] = listaAtual.get(j).getProfessor();
+                }
+            }
+        }
+        
+        
+        return nomeProfessores;
     }
 
     public static ArrayList<String> findProfessorDisponibility(String nome, List<Professor> disponibilidade) {
@@ -663,7 +613,7 @@ public class AgApplication {
         ArrayList<Integer> diasProfessores = new ArrayList<>();
 
         for (int i = 0; i < disponibilidade.size(); i++) {
-            // Verifique se o objeto é do tipo Professor
+            // Verifica se o objeto é do tipo Professor
             if (disponibilidade.get(i) instanceof Professor) {
                 Professor professor = disponibilidade.get(i);
                 if (nome.equals(professor.getNome())) {
@@ -740,29 +690,287 @@ public class AgApplication {
         return pontuacao;
     }
 
-    /*public static String initializeAndRunAlgorithm(GeneticConfigDTO config) {
-        // Configura os parâmetros do algoritmo 
-        this.probabilidadeCruzamento = config.getProbabilidadeCruzamento();
-        this.mutacao = config.getMutacao();
-        this.qtdElitismo = config.getQtdElitismo();
-        this.iteracoes = config.getIteracoes();
-        this.iteracoesSemMelhoria = config.getIteracoesSemMelhoria();
-        // Agora executa o algoritmo genético com esses parâmetros 
-        // Isso pode envolver várias etapas, como inicialização de população, cruzamento, mutação, etc. 
-        return runAlgorithm();
-    }
-    // Método que executa o algoritmo genético 
+    public static ScheduleResultDTO initializeMain(GeneticConfigDTO config) {
+        long startTime = System.currentTimeMillis();
 
-    private static String runAlgorithm() {
-        // Lógica do algoritmo genético aqui. 
-        // Exemplo de resposta, isso deve ser substituído pela lógica real do AG. 
+        // Configura os parâmetros do algoritmo 
+        AgApplication.probabilidadeCruzamentoFront = config.getProbabilidadeCruzamento();
+        AgApplication.probabilidadeMutacaoFront = config.getProbabilidadeMutacao();
+        AgApplication.qtdElitismoFront = config.getQtdElitismo();
+        AgApplication.iteracoesFront = config.getIteracoes();
+        AgApplication.iteracoesSemMelhoriaFront = config.getIteracoesSemMelhoria();
+
+        int contadorIteracoes = initializeAlgorithm();
+
+        long endTime = System.currentTimeMillis();
+
+        long duration = endTime - startTime;
+        // Isso pode envolver várias etapas, como inicialização de população, cruzamento, mutação, etc. 
         ScheduleResultDTO result = new ScheduleResultDTO();
-        result.setFitnessScore(85.7);
-        // Exemplo de pontuação 
-        result.setBestSolution(List.of(1, 0, 1, 1, 0));
-        // Exemplo de melhor solução 
-        result.setIterations(100);
-        // Exemplo de iterações feitas 
+
+        result.setBestFitnessScore(new ArrayList<>(Arrays.asList(
+                bestFitnessCC,
+                bestFitnessEM,
+                bestFitnessEQ,
+                bestFitnessTA,
+                bestFitnessTI,
+                bestFitnessTM
+        )));
+        
+        ObjetoTabela objCC = new ObjetoTabela(
+                bestChromossomeCC, 
+                findClassName(bestChromossomeCC, disciplinaCC), 
+                findProfessorNameArray(bestChromossomeCC, disciplinaCC)
+        );
+        ObjetoTabela objEQ = new ObjetoTabela(
+                bestChromossomeEQ, 
+                findClassName(bestChromossomeEQ, disciplinaEQ), 
+                findProfessorNameArray(bestChromossomeEQ, disciplinaEQ)
+        );
+        ObjetoTabela objEM = new ObjetoTabela(
+                bestChromossomeEM, 
+                findClassName(bestChromossomeEM, disciplinaEM), 
+                findProfessorNameArray(bestChromossomeEM, disciplinaEM)
+        );
+        ObjetoTabela objTA = new ObjetoTabela(
+                bestChromossomeTA, 
+                findClassName(bestChromossomeTA, disciplinaTA), 
+                findProfessorNameArray(bestChromossomeTA, disciplinaTA)
+        );
+        ObjetoTabela objTI = new ObjetoTabela(
+                bestChromossomeTI, 
+                findClassName(bestChromossomeTI, disciplinaTI), 
+                findProfessorNameArray(bestChromossomeTI, disciplinaTI)
+        );
+        ObjetoTabela objTM = new ObjetoTabela(
+                bestChromossomeTM, 
+                findClassName(bestChromossomeTM, disciplinaTM), 
+                findProfessorNameArray(bestChromossomeTM, disciplinaTM)
+        );
+        result.setObjTabela(new ObjetoTabela[] {objCC, objEQ, objEM, objTA, objTI, objTM});
+        result.setContIteracoes(contadorIteracoes);
+        result.setTempoExecucao(duration);
         return result;
-    }*/
+    }
+
+    public static int initializeAlgorithm() {
+        loadDisciplineFiles();
+        int contadorIteracoes = 0;
+        int contadorSemMelhoria = 0;
+        // Variáveis para armazenar o melhor fitness de cada curso
+        int melhorFitnessCC = Integer.MIN_VALUE;
+        int melhorFitnessEM = Integer.MIN_VALUE;
+        int melhorFitnessEQ = Integer.MIN_VALUE;
+        int melhorFitnessTA = Integer.MIN_VALUE;
+        int melhorFitnessTI = Integer.MIN_VALUE;
+        int melhorFitnessTM = Integer.MIN_VALUE;
+
+        for (int i = 0; i < iteracoesFront; i++) {
+            contadorIteracoes++;
+            generateRandomPositionsForClassCode(disciplinaCC, "CC");
+            generateRandomPositionsForClassCode(disciplinaEM, "EM");
+            generateRandomPositionsForClassCode(disciplinaEQ, "EQ");
+            generateRandomPositionsForClassCode(disciplinaTA, "TA");
+            generateRandomPositionsForClassCode(disciplinaTI, "TI");
+            generateRandomPositionsForClassCode(disciplinaTM, "TM");
+
+            //ultima chamada do fitness
+            fitnessBetweenCourses();
+
+            //processo de cruzamento
+            crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizCC, fitnessCC, "CC");
+            crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizEQ, fitnessEQ, "EQ");
+            crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizEM, fitnessEM, "EM");
+            crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizTA, fitnessTA, "TA");
+            crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizTI, fitnessTI, "TI");
+            crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizTM, fitnessTM, "TM");
+
+            //chamada de método da mutação
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizCC, intervalosCodigosDeAulaCC);
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizEQ, intervalosCodigosDeAulaEQ);
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizEM, intervalosCodigosDeAulaEM);
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizTA, intervalosCodigosDeAulaTA);
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizTI, intervalosCodigosDeAulaTI);
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizTM, intervalosCodigosDeAulaTM);
+
+            recallFitness();
+
+            boolean houveMelhoriaEmAlgumCurso = false;
+
+            // Verifica se houve melhoria no fitness de cada curso
+            int melhorFitnessAtualCC = getMelhorFitness(fitnessCC);
+            int melhorFitnessAtualEM = getMelhorFitness(fitnessEM);
+            int melhorFitnessAtualEQ = getMelhorFitness(fitnessEQ);
+            int melhorFitnessAtualTA = getMelhorFitness(fitnessTA);
+            int melhorFitnessAtualTI = getMelhorFitness(fitnessTI);
+            int melhorFitnessAtualTM = getMelhorFitness(fitnessTM);
+
+            // Se algum curso teve melhoria, atualiza o melhor fitness
+            if (melhorFitnessAtualCC > melhorFitnessCC) {
+                melhorFitnessCC = melhorFitnessAtualCC;
+                houveMelhoriaEmAlgumCurso = true;
+            }
+            if (melhorFitnessAtualEM > melhorFitnessEM) {
+                melhorFitnessEM = melhorFitnessAtualEM;
+                houveMelhoriaEmAlgumCurso = true;
+            }
+            if (melhorFitnessAtualEQ > melhorFitnessEQ) {
+                melhorFitnessEQ = melhorFitnessAtualEQ;
+                houveMelhoriaEmAlgumCurso = true;
+            }
+            if (melhorFitnessAtualTA > melhorFitnessTA) {
+                melhorFitnessTA = melhorFitnessAtualTA;
+                houveMelhoriaEmAlgumCurso = true;
+            }
+            if (melhorFitnessAtualTI > melhorFitnessTI) {
+                melhorFitnessTI = melhorFitnessAtualTI;
+                houveMelhoriaEmAlgumCurso = true;
+            }
+            if (melhorFitnessAtualTM > melhorFitnessTM) {
+                melhorFitnessTM = melhorFitnessAtualTM;
+                houveMelhoriaEmAlgumCurso = true;
+            }
+            // Se nenhum curso teve melhoria, incrementa o contador de iterações sem melhoria
+            if (!houveMelhoriaEmAlgumCurso) {
+                contadorSemMelhoria++;
+            }
+
+            if (contadorSemMelhoria >= iteracoesSemMelhoriaFront && iteracoesSemMelhoriaFront != 0) {
+                System.out.println("Interrompendo: Nenhum curso teve melhoria após " + iteracoesSemMelhoriaFront + " iterações.");
+                break;
+            }
+        }
+        return contadorIteracoes;
+    }
+
+    private static int getMelhorFitness(ArrayList<Integer> fitnessList) {
+        return fitnessList.stream().max(Integer::compare).orElse(Integer.MIN_VALUE);
+    }
+
+    public static void recallFitness() {
+        //Refazer as chamadas de fitness
+        ArrayList descontosCC = new ArrayList();
+        ArrayList descontosEQ = new ArrayList();
+        ArrayList descontosEM = new ArrayList();
+        ArrayList descontosTA = new ArrayList();
+        ArrayList descontosTI = new ArrayList();
+        ArrayList descontosTM = new ArrayList();
+
+        String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
+        List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
+
+        fitnessCC = fitnessWorkLoadFunction(matrizCC, "CC",
+                disciplinaCC, intervalosCodigosDeAulaCC);
+        descontosCC = fitnessProfessorAvaiabilityFunction(matrizCC, "CC",
+                disciplinaCC, disponibilidadeProfessores);
+
+        fitnessEQ = fitnessWorkLoadFunction(matrizEQ, "EQ",
+                disciplinaEQ, intervalosCodigosDeAulaEQ);
+        descontosEQ = fitnessProfessorAvaiabilityFunction(matrizEQ, "EQ",
+                disciplinaEQ, disponibilidadeProfessores);
+
+        fitnessEM = fitnessWorkLoadFunction(matrizEM, "EM",
+                disciplinaEM, intervalosCodigosDeAulaEM);
+        descontosEM = fitnessProfessorAvaiabilityFunction(matrizEM, "EM",
+                disciplinaEM, disponibilidadeProfessores);
+
+        fitnessTA = fitnessWorkLoadFunction(matrizTA, "TA",
+                disciplinaTA, intervalosCodigosDeAulaTA);
+        descontosTA = fitnessProfessorAvaiabilityFunction(matrizTA, "TA",
+                disciplinaTA, disponibilidadeProfessores);
+
+        fitnessTI = fitnessWorkLoadFunction(matrizTI, "TI",
+                disciplinaTI, intervalosCodigosDeAulaTI);
+        descontosTI = fitnessProfessorAvaiabilityFunction(matrizTI, "TI",
+                disciplinaTI, disponibilidadeProfessores);
+
+        fitnessTM = fitnessWorkLoadFunction(matrizTM, "TM",
+                disciplinaTM, intervalosCodigosDeAulaTM);
+        descontosTM = fitnessProfessorAvaiabilityFunction(matrizTM, "TM",
+                disciplinaTM, disponibilidadeProfessores);
+
+        for (int i = 0; i < fitnessCC.size(); i++) {
+            fitnessCC.set(i, (int) fitnessCC.get(i) - (int) descontosCC.get(i));
+            fitnessEQ.set(i, (int) fitnessEQ.get(i) - (int) descontosEQ.get(i));
+            fitnessEM.set(i, (int) fitnessEM.get(i) - (int) descontosEM.get(i));
+            fitnessTA.set(i, (int) fitnessTA.get(i) - (int) descontosTA.get(i));
+            fitnessTI.set(i, (int) fitnessTI.get(i) - (int) descontosTI.get(i));
+            fitnessTM.set(i, (int) fitnessTM.get(i) - (int) descontosTM.get(i));
+        }
+
+        fitnessBetweenCourses();
+
+        //verificar qual o melhor cromossomo
+        bestChromossomeVerification(bestFitnessCC, fitnessCC, matrizCC, "CC");
+        bestChromossomeVerification(bestFitnessEQ, fitnessEQ, matrizEQ, "EQ");
+        bestChromossomeVerification(bestFitnessEM, fitnessEM, matrizEM, "EM");
+        bestChromossomeVerification(bestFitnessTA, fitnessTA, matrizTA, "TA");
+        bestChromossomeVerification(bestFitnessTI, fitnessTI, matrizTI, "TI");
+        bestChromossomeVerification(bestFitnessTM, fitnessTM, matrizTM, "TM");
+
+        fitnessCC.clear();
+        fitnessEQ.clear();
+        fitnessEM.clear();
+        fitnessTA.clear();
+        fitnessTI.clear();
+        fitnessTM.clear();
+    }
+
+    public static void bestChromossomeVerification(int bestFitness, ArrayList fitness, int[][] matrizCromossomo, String curso) {
+        for (int i = 0; i < fitness.size(); i++) {
+            int fitnessAtual = (int) fitness.get(i);
+            if (bestFitness < fitnessAtual) {
+                bestFitness = fitnessAtual;
+                switch (curso) {
+                    case "CC":
+                        bestChromossomeCC = matrizCromossomo[i];
+                        bestFitnessCC = fitnessAtual;
+                        break;
+                    case "EQ":
+                        bestChromossomeEQ = matrizCromossomo[i];
+                        bestFitnessEQ = fitnessAtual;
+                        break;
+                    case "EM":
+                        bestChromossomeEM = matrizCromossomo[i];
+                        bestFitnessEM = fitnessAtual;
+                        break;
+                    case "TA":
+                        bestChromossomeTA = matrizCromossomo[i];
+                        bestFitnessTA = fitnessAtual;
+                        break;
+                    case "TI":
+                        bestChromossomeTI = matrizCromossomo[i];
+                        bestFitnessTI = fitnessAtual;
+                        break;
+                    case "TM":
+                        bestChromossomeTM = matrizCromossomo[i];
+                        bestFitnessTM = fitnessAtual;
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
+
+            }
+        }
+    }
+
+    public static void loadDisciplineFiles() {
+        String caminhoArquivoCC = "src/main/resources/planilhas/Curso_CienciaComputacao.xlsx";
+        disciplinaCC = FileReaderService.lerHorarios(caminhoArquivoCC);
+
+        String caminhoArquivoEM = "src/main/resources/planilhas/Curso_EngenhariaMecanica_Matutino.xlsx";
+        disciplinaEM = FileReaderService.lerHorarios(caminhoArquivoEM);
+
+        String caminhoArquivoEQ = "src/main/resources/planilhas/Curso_EngenhariaQuimica_Matutino.xlsx";
+        disciplinaEQ = FileReaderService.lerHorarios(caminhoArquivoEQ);
+
+        String caminhoArquivoTA = "src/main/resources/planilhas/Curso_TecnicoAdministracaoVespertino_aula3a6a.xlsx";
+        disciplinaTA = FileReaderService.lerHorarios(caminhoArquivoTA);
+
+        String caminhoArquivoTI = "src/main/resources/planilhas/Curso_TecnicoInformaticaParaInternet_Vespertino_aula3a6a.xlsx";
+        disciplinaTI = FileReaderService.lerHorarios(caminhoArquivoTI);
+
+        String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
+        disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
+    }
 }

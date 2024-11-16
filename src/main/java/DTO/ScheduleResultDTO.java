@@ -1,35 +1,48 @@
-
 package DTO;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import model.ObjetoTabela;
 
 public class ScheduleResultDTO {
-    private double fitnessScore;
-    private List<Integer> bestSolution;
-    private int iterations;
+
+    private ArrayList<Integer> bestFitnessScore;
+    private ObjetoTabela[] objTabela;
+    private int contIteracoes;
+    private long tempoExecucao;
 
     // Getters e Setters
-    public double getFitnessScore() {
-        return fitnessScore;
+    public ArrayList<Integer> getBestFitnessScore() {
+        return bestFitnessScore;
     }
 
-    public void setFitnessScore(double fitnessScore) {
-        this.fitnessScore = fitnessScore;
+    public void setBestFitnessScore(ArrayList<Integer> bestFitnessScore) {
+        this.bestFitnessScore = bestFitnessScore;
     }
 
-    public List<Integer> getBestSolution() {
-        return bestSolution;
+    public ObjetoTabela[] getObjTabela() {
+        return objTabela;
     }
 
-    public void setBestSolution(List<Integer> bestSolution) {
-        this.bestSolution = bestSolution;
+    public void setObjTabela(ObjetoTabela[] objTabela) {
+        this.objTabela = objTabela;
     }
 
-    public int getIterations() {
-        return iterations;
+    public int getContIteracoes() {
+        return contIteracoes;
     }
 
-    public void setIterations(int iterations) {
-        this.iterations = iterations;
+    public void setContIteracoes(int contIteracoes) {
+        this.contIteracoes = contIteracoes;
     }
+
+    public long getTempoExecucao() {
+        return tempoExecucao;
+    }
+
+    public void setTempoExecucao(long tempoExecucao) {
+        this.tempoExecucao = tempoExecucao;
+    }
+    
+
 }
