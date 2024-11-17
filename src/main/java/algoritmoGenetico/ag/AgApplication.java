@@ -692,7 +692,7 @@ public class AgApplication {
 
     public static ScheduleResultDTO initializeMain(GeneticConfigDTO config) {
         long startTime = System.currentTimeMillis();
-
+        clearFitness();
         // Configura os parâmetros do algoritmo 
         AgApplication.probabilidadeCruzamentoFront = config.getProbabilidadeCruzamento();
         AgApplication.probabilidadeMutacaoFront = config.getProbabilidadeMutacao();
@@ -907,13 +907,8 @@ public class AgApplication {
         bestChromossomeVerification(bestFitnessTA, fitnessTA, matrizTA, "TA");
         bestChromossomeVerification(bestFitnessTI, fitnessTI, matrizTI, "TI");
         bestChromossomeVerification(bestFitnessTM, fitnessTM, matrizTM, "TM");
-
-        fitnessCC.clear();
-        fitnessEQ.clear();
-        fitnessEM.clear();
-        fitnessTA.clear();
-        fitnessTI.clear();
-        fitnessTM.clear();
+        
+        clearFitness();                
     }
 
     public static void bestChromossomeVerification(int bestFitness, ArrayList fitness, int[][] matrizCromossomo, String curso) {
@@ -972,5 +967,14 @@ public class AgApplication {
 
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
+    }
+    
+    public static void clearFitness(){
+        fitnessCC.clear();
+        fitnessEQ.clear();
+        fitnessEM.clear();
+        fitnessTA.clear();
+        fitnessTI.clear();
+        fitnessTM.clear();
     }
 }

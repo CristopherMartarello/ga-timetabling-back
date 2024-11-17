@@ -1,7 +1,6 @@
 package DTO;
 
 import java.util.ArrayList;
-import java.util.Map;
 import model.ObjetoTabela;
 
 public class ScheduleResultDTO {
