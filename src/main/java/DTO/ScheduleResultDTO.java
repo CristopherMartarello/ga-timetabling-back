@@ -8,9 +8,10 @@ public class ScheduleResultDTO {
     private ArrayList<Integer> bestFitnessScore;
     private ObjetoTabela[] objTabela;
     private int contIteracoes;
+    private int IteracoesTotal;
     private long tempoExecucao;
 
-    // Getters e Setters
+    
     public ArrayList<Integer> getBestFitnessScore() {
         return bestFitnessScore;
     }
@@ -35,6 +36,14 @@ public class ScheduleResultDTO {
         this.contIteracoes = contIteracoes;
     }
 
+    public int getIteracoesTotal() {
+        return IteracoesTotal;
+    }
+
+    public void setIteracoesTotal(int IteracoesTotal) {
+        this.IteracoesTotal = IteracoesTotal;
+    }
+    
     public long getTempoExecucao() {
         return tempoExecucao;
     }

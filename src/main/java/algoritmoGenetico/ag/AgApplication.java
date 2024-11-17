@@ -749,6 +749,7 @@ public class AgApplication {
         );
         result.setObjTabela(new ObjetoTabela[] {objCC, objEQ, objEM, objTA, objTI, objTM});
         result.setContIteracoes(contadorIteracoes);
+        result.setIteracoesTotal(iteracoesFront);
         result.setTempoExecucao(duration);
         return result;
     }
