@@ -5,6 +5,7 @@ package model;
  * @author Nathan
  */
 public class ObjetoTabela {
+    //CLASSE QUE CONTÉM OS DADOS NECESSÁRIOS PARA A FORMAÇÃO DA TABELA NO FRONT
     private int[] codigo;
     private String[] nomeMateria;
     private String[] professorMinistrante;

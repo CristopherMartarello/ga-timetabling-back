@@ -8,9 +8,9 @@ import java.util.ArrayList;
  */
 
 public class Professor {
-    
-    private String nome;
-    private ArrayList horarios;
+    //CLASSE QUE IRÁ CONTER OS DADOS DOS PROFESSORES
+    private final String nome;
+    private final ArrayList horarios;
 
     public Professor(String nome, ArrayList horarios) {
         this.nome = nome;

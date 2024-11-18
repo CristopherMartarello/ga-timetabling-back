@@ -6,12 +6,12 @@ package model;
  */
 
 public class Disciplina {
-    
-    private int codigo;
-    private String nome;
-    private int fase;
-    private int cargaHoraria;
-    private String professor;
+    //CLASSE QUE IRÁ CONTER OS DADOS DE CADA DISCIPLINA
+    private final int codigo;
+    private final String nome;
+    private final int fase;
+    private final int cargaHoraria;
+    private final String professor;
 
     public Disciplina(int codigo, String nome, int fase, int cargaHoraria, String professor) {
         this.codigo = codigo;

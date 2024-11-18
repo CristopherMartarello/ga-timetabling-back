@@ -2,6 +2,7 @@
 package DTO;
 
 public class GeneticConfigDTO {
+    //CLASSE QUE RECEBERÁ OS DADOS DO FRONT
     private Integer probabilidadeCruzamento;
     private Integer probabilidadeMutacao;
     private Integer qtdElitismo;

@@ -31,8 +31,10 @@ public class AgApplication {
     public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),
             fitnessTA = new ArrayList(), fitnessTI = new ArrayList(), fitnessTM = new ArrayList();
 
+    //Variavel que vai receber os fitness dos cursos somados
     public static ArrayList bestFitness = new ArrayList();
 
+    //Variavel que irá receber a melhor nota dos cromossomos somados
     public static int maiorValorCromossomo = 0;
 
     //Variaveis da matriz de cada curso
@@ -56,7 +58,6 @@ public class AgApplication {
 
     public static void generateRandomPositionsForClassCode(List<Disciplina> listaAtual, String curso) {
         int cromossomos = 0;
-        int[] vetorTurmaCodigo = null;
 
         HashSet<Integer> codigosDeAula = new HashSet<>(); //Set para contar os códigos
         Map<Integer, Integer> contarFases = new HashMap<>(); //Map para contar o numero de fases e as vezes que aparecem
@@ -65,8 +66,9 @@ public class AgApplication {
             contarFases.put(fase, contarFases.getOrDefault(fase, 0) + 1);
             codigosDeAula.add(d.getCodigo());
         }
+        // chamada da função para gerar o tamanho do cromossomo para a matriz
         cromossomos = generateCromossomeSize(5, 4);
-        vetorTurmaCodigo = new int[cromossomos];
+        // chamada da função para gerar matriz
         generateCromossomeMatrice(cromossomos, listaAtual, contarFases, curso);
     }
 
@@ -77,9 +79,10 @@ public class AgApplication {
     public static int[] randomizeCromossomesValues(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
         List<Integer> chaves = new ArrayList<>(fases.keySet()); //quais as fases disponíveis (2, 4, 6, 8)
         List<Integer> valores = new ArrayList<>(fases.values());//quantas matérias possuem em cada fase no curso
-        int disciplinaPadding = tamanhoVetor / 4;
+        int disciplinaPadding = tamanhoVetor / 4; // padding entre cada fase
 
         Random random = new Random();
+        //vetor que irá receber o cromossomo
         int[] vetorRandomizado = new int[tamanhoVetor];
 
         int contador = 0, contadorPeriodo = 1;
@@ -93,6 +96,7 @@ public class AgApplication {
 
             // Preenche com os números aleatórios daquele intervalo
             for (int j = 0; j < disciplinaPadding && (i * disciplinaPadding + j) < tamanhoVetor; j++) {
+                //Verifica se for Cursos Técnicos, para as aulas de segunda serem -1
                 if ((curso.equals("TA") || curso.equals("TI") || curso.equals("TM"))
                         && (contadorPeriodo == 1 || contadorPeriodo == 6 || contadorPeriodo == 11 || contadorPeriodo == 16
                         || contadorPeriodo == 21 || contadorPeriodo == 26 || contadorPeriodo == 31 || contadorPeriodo == 36)) {
@@ -113,27 +117,38 @@ public class AgApplication {
         return vetorRandomizado;
     }
 
-    public static void generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual, Map<Integer, Integer> fases, String curso) {
-        ArrayList fitnessWorkLoad = new ArrayList();
-        ArrayList fitnessProfessorAvaiability = new ArrayList();
-
-        List<Integer> intervalosCodigosDeAula = new ArrayList<>(fases.values());
+    public static void generateCromossomeMatrice(int tamanhoVetor, List<Disciplina> listaAtual,
+            Map<Integer, Integer> fases, String curso) {
+        //matriz com os cromossomos
         int[][] matrizCromossomo = new int[20][tamanhoVetor];
 
+        //chamada de 20 vezes a função para gerar o cromossomo
         for (int i = 0; i < 20; i++) {
             matrizCromossomo[i] = randomizeCromossomesValues(tamanhoVetor, listaAtual, fases, curso);
         }
 
-//        System.out.println(Arrays.toString(matrizCromossomo[0]));
+        //varivael que vai reber o valor dos fitness em relação a carga horária
+        ArrayList fitnessWorkLoad = new ArrayList();
+        //varivael que vai reber o valor dos fitness em relação a disponibilidade do professor
+        ArrayList fitnessProfessorAvaiability = new ArrayList();
+        //variavel com a quantidade de disciplinas em cada fase
+        List<Integer> intervalosCodigosDeAula = new ArrayList<>(fases.values());
+
+        //chamada do método do primeiro fitness, em relação a carga horária
         fitnessWorkLoad = fitnessWorkLoadFunction(matrizCromossomo, curso, listaAtual, intervalosCodigosDeAula);
 
+        //Leitura da planilha das disponibilidades dos prodessores
         String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
 
+        //chamada do método do segundo fitness, em relação a disponibilidade do professor        
         fitnessProfessorAvaiability = fitnessProfessorAvaiabilityFunction(matrizCromossomo, curso, listaAtual, disponibilidadeProfessores);
+
+        //verificação de qual curso esta fazendo a verificação do fitness para que suas variaveis possuam seus devidos valores
         for (int i = 0; i < fitnessWorkLoad.size(); i++) {
             switch (curso) {
                 case "CC": {
+                    //fitness do curso é calculado pelo primeiro fitness com a diferença dos descontos do segundo fitness
                     fitnessCC.add((int) fitnessWorkLoad.get(i) - (int) fitnessProfessorAvaiability.get(i));
                     matrizCC = matrizCromossomo;
                     intervalosCodigosDeAulaCC = intervalosCodigosDeAula;
@@ -173,47 +188,45 @@ public class AgApplication {
         }
     }
 
-    public static ArrayList fitnessWorkLoadFunction(
-            int[][] matrizCromossomo,
-            String curso,
-            List<Disciplina> listaAtual,
-            List<Integer> intervalosCodigosDeAula
+    public static ArrayList fitnessWorkLoadFunction(int[][] matrizCromossomo, String curso,
+            List<Disciplina> listaAtual, List<Integer> intervalosCodigosDeAula
     ) {
         //Fitness: verifica se as disciplinas estão batendo a carga horária
-
-        int pontuacao = 1000;
-        ArrayList fitness = new ArrayList();
-        ArrayList codLidos = new ArrayList();
+        int pontuacao = 1000; //pontuacao do fitness atual
+        ArrayList fitness = new ArrayList(); //variavel que vai receber os 20 fitness de cada curso
+        ArrayList codLidos = new ArrayList(); //verifica quais codigos já são lidos
         int contadorPadding = 0, contRepeticao = 0;
         for (int coluna = 0; coluna < matrizCromossomo.length; coluna++) {
             for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
                 int cont = 0;
                 int codigo = matrizCromossomo[coluna][linha];
-                if (codigo != -1) { //verifica se tem aula no dia
+                //verifica se tem aula no dia, já que tem cursos que não possuem aulas em algumas datas
+                if (codigo != -1) {
+                    //chama a função para pegar a carga horária em relação ao código da vez
                     int cargaHoraria = findWorkload(codigo, listaAtual);
+                    //verifica se aquele código já não foi lido
                     boolean existe = codLidos.contains(codigo);
-//                        System.out.println("----------------------------------------------");
-//                        System.out.println("Codigo: " + codigo + ", esta no Vetor? " + existe);
                     contadorPadding++;
                     if (!existe) {
+                        //adiciona o código no Array de lidos
                         codLidos.add(codigo);
-//                            System.out.println("lidos: " + codLidos);
-//
-//                            System.out.println("entrei com o " + codigo);
-                        for (int i = 0; i < matrizCromossomo[0].length; i++) { //10 = PADDING
+                        //verifica quantas vezes o codigo irá se repetir no cromossomo
+                        for (int i = 0; i < matrizCromossomo[0].length; i++) {
                             if (codigo == matrizCromossomo[0][i]) {
                                 cont++;
                             }
                         }
-
+                        /*verifica se a carga horária em relação ao contador de repetição está batendo 
+                        caso não tenha, é descontado 10 pontos na pontuação */
                         if ((cargaHoraria == 80 && cont != 2) || (cargaHoraria == 40 && cont != 1)) {
                             pontuacao = pontuacao - 10;
-//                                System.out.println("contador " + cont + ", carga horaria " + cargaHoraria + ", pontuacao " + pontuacao);
                         }
                     }
 
+                    //como a cada 10 posições no vetor possui uma fase diferente, a cada 10 iteracoes os códigos lidos são zerados
                     if (contadorPadding % 10 == 0) {
-//                            System.out.println("APAGUEI O VETOR");
+                        /*chama a função para verificar se algum número no padding da fase não apareceu, 
+                        caso não tenha aparecido será descontado 10 pontos*/
                         int novaPontuacao = verifyIntervals(matrizCromossomo, codLidos, intervalosCodigosDeAula, pontuacao, contRepeticao, curso);
                         contRepeticao++;
                         pontuacao = novaPontuacao;
@@ -221,75 +234,69 @@ public class AgApplication {
                     }
                 }
             }
+            //a cada cromossomo é adicionado o seu fitness, e as variáveis são zeradas para o processo ser refeito
             fitness.add(pontuacao);
             pontuacao = 1000;
             contRepeticao = 0;
             contadorPadding = 0;
-
         }
-        //System.out.println(fitness);
+        //retorna os fitness da matriz
         return fitness;
     }
 
-    public static ArrayList fitnessProfessorAvaiabilityFunction(
-            int[][] matrizCromossomo,
-            String curso,
-            List<Disciplina> listaAtual,
-            List<Professor> disponibilidadeProfessores
+    public static ArrayList fitnessProfessorAvaiabilityFunction(int[][] matrizCromossomo,String curso,
+            List<Disciplina> listaAtual, List<Professor> disponibilidadeProfessores
     ) {
         //Fitness: verifica se um professor pode realmente dar aula naquele dia
-
         int desconto = 0;
+        //array de desconto que serão subtraidas com o fitness já obtido
         ArrayList descontos = new ArrayList();
+        //lista dos dias que podem ser trabalhados
         List<String> dias = new ArrayList<>(List.of("Segunda", "Terca", "Quarta", "Quinta", "Sexta"));
         int contDias = 0;
-        //System.out.println(Arrays.toString(matrizCromossomo[0]));
         for (int coluna = 0; coluna < matrizCromossomo.length; coluna++) {
-
             for (int linha = 0; linha < matrizCromossomo[0].length; linha++) {
-                //System.out.println("================================");
+                //pega o código em relação a coluna e linha
                 int codigo = matrizCromossomo[coluna][linha];
+                //verifica se tem aula naquele dia
                 if (codigo != -1) {
+                    //chama a função para achar o nome do professor em relação ao código
                     String nomeProfessor = findProfessorName(codigo, listaAtual);
-                    //System.out.println(nomeProfessor);
+                    //chama a função para saber quais dias o professor não pode trabalhar, o valor é recebido em um Array
                     ArrayList indisponibilidadeProfessor = findProfessorDisponibility(nomeProfessor, disponibilidadeProfessores);
-                    if (indisponibilidadeProfessor.isEmpty()) {
-                        //System.out.println("Professor não possui indisponibilidade");
-                    }
-                    for (int i = 0; i < indisponibilidadeProfessor.size(); i++) {
-                        //System.out.println("Dias indisponíveis: " + indisponibilidadeProfessor.get(i).toString());
-                        //System.out.println("Data pra ser marcado: " + dias.get(contDias));
-                        if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
-                            //System.out.println("DIA ENCONTRADO PORRA: " + indisponibilidadeProfessor.get(i).toString());
-                            desconto += 10;
-                            break;
+                    //verifica se o professor possui indisponibilidade
+                    if (!indisponibilidadeProfessor.isEmpty()) {
+                        for (int i = 0; i < indisponibilidadeProfessor.size(); i++) {
+                            //Verifica se o dia que foi colocado para o professor trabalhar não possui conflito com suas indisponibilidades
+                            if (indisponibilidadeProfessor.get(i).toString().equals(dias.get(contDias))) {
+                                //se houver conflito, desconta 10 pontos
+                                desconto += 10;
+                                break;
+                            }
                         }
                     }
                     contDias++;
+                    //caso o contador de dias chegue a 5, é zerado para o processo ser repetido
                     if (contDias == 5) {
                         contDias = 0;
                     }
                 }
             }
+            //adiciona o desconto calculado na array de descontos
             descontos.add(desconto);
+            //zera a variavel para se calcular das outras matrizes
             desconto = 0;
 
         }
-        //System.out.println(descontos);
+        //retorna os descontos
         return descontos;
     }
 
     public static void fitnessBetweenCourses() {
         //Fitness: verifica se um professor não está dando aula em outra turma
-        /*System.out.println("ANTES: " + fitnessCC);
-        System.out.println("ANTES: " + fitnessEM);
-        System.out.println("ANTES: " + fitnessEQ);
-        System.out.println("ANTES: " + fitnessTA);
-        System.out.println("ANTES: " + fitnessTI);
-        System.out.println("ANTES: " + fitnessTM);*/
-        //faz um 'for' do tamanho das matrizes para a comparação
+
+        //loop do tamanho das matrizes para a comparação
         for (int i = 0; i < matrizCC.length; i++) {
-            //System.out.println("--------------------");
             for (int j = 0; j < matrizCC[0].length; j++) {
                 //pega todos os códigos das aulas referente aos cursos
                 int codigoCC = matrizCC[i][j];
@@ -307,7 +314,7 @@ public class AgApplication {
                 String nomeTI = findProfessorName(codigoTI, disciplinaTI);
                 String nomeTM = findProfessorName(codigoTM, disciplinaTM);
 
-                //verificações curso graduação
+                //verifica se os nomes dos cursos não são iguais dos outros cursos, caso for, descontado 10 pontos
                 if (nomeCC.equals(nomeEM) || nomeCC.equals(nomeEQ) || (nomeCC.equals(nomeTA) && codigoTA != -1)
                         || (nomeCC.equals(nomeTI) && codigoTI != -1) || (nomeCC.equals(nomeTM) && codigoTM != -1)) {
                     fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
@@ -320,7 +327,7 @@ public class AgApplication {
                         || (nomeEM.equals(nomeTI) && codigoTI != -1) || (nomeEM.equals(nomeTM) && codigoTM != -1)) {
                     fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
                 }
-
+                //verifica se os técnicos possuem aula naquele dia
                 if (codigoTA != -1) {
                     if (nomeTA.equals(nomeCC) || nomeTA.equals(nomeEQ) || nomeTA.equals(nomeEM)
                             || nomeTA.equals(nomeTI) || nomeTA.equals(nomeTM)) {
@@ -341,12 +348,6 @@ public class AgApplication {
                 }
             }
         }
-        /*System.out.println("DEPOIS: " + fitnessCC);
-        System.out.println("DEPOIS: " + fitnessEM);
-        System.out.println("DEPOIS: " + fitnessEQ);
-        System.out.println("DEPOIS: " + fitnessTA);
-        System.out.println("DEPOIS: " + fitnessTI);
-        System.out.println("DEPOIS: " + fitnessTM);*/
     }
 
     public static void crossingChromossomes(
@@ -356,57 +357,62 @@ public class AgApplication {
             ArrayList fitness,
             String curso
     ) {
+        //variavel que vai receber os cromossomos
         Map<Integer, int[]> cromossomosSelecionados = new HashMap<>();
 
+        //o fitness é ordenado para saber quais serão selecionados por elitismo
         ArrayList<Integer> fitnessOrdenado = new ArrayList<>(fitness);
         Collections.sort(fitnessOrdenado, Collections.reverseOrder());
 
+        //posição de cada fitness
         Set<Integer> indicesSelecionados = new HashSet<>();
         int cromossomosSelecionadosCount = 0;
 
         for (int i = 0; cromossomosSelecionadosCount < cromossomosElitismo && i < fitnessOrdenado.size(); i++) {
             int valorFitness = fitnessOrdenado.get(i);
-
-            // Encontrar todos os índices com esse valor de fitness
+            // Encontra todos os índices com esse valor de fitness
             for (int k = 0; k < fitness.size(); k++) {
                 if (fitness.get(k).equals(valorFitness) && !indicesSelecionados.contains(k)) {
                     // Se ainda não foi selecionado, adiciona
                     indicesSelecionados.add(k);
                     cromossomosSelecionados.put(k, matrizCromossomo[k]);
                     cromossomosSelecionadosCount++;
-                    break;  // Stop, move to next elitism selection
+                    break;
                 }
             }
         }
 
+        //variavel que ira receber os fitness somados sequencialmente
         ArrayList fitnessAbsoluto = new ArrayList();
         fitnessAbsoluto = totalFitness(fitness);
+        //chama o metodo da roleta
         rouletteMethod(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosElitismo, probabilidadeCruzamento, curso);
     }
 
-    public static void mutatingChromossomes(
-            int probabilidadeMutacao,
-            int[][] matrizCromossomo,
-            List<Integer> intervalosCodigosDeAula
+    public static void mutatingChromossomes(int probabilidadeMutacao,int[][] matrizCromossomo,List<Integer> intervalosCodigosDeAula, String curso
     ) {
+        //random para verificar a probabilidade de mutação
         Random rand = new Random();
         for (int i = 0; i < matrizCromossomo.length; i++) {
             int nMutacao = rand.nextInt(100);
-            if (nMutacao <= probabilidadeMutacao) {
-                //System.out.println(Arrays.toString(matrizCromossomo[i]));
+            if (nMutacao < probabilidadeMutacao) {
+                //se der certo a probabilidade, faz um novo random para gerar um ponto para a mutação ser feita
                 int posicao = rand.nextInt(40);
+                //verifica se a mutação não for -1
                 if (matrizCromossomo[i][posicao] != -1) {
                     int tamanhoPadding = 10;
                     int paddingIndex = posicao / tamanhoPadding;
                     int min = (paddingIndex == 0) ? 1 : intervalosCodigosDeAula.subList(0, paddingIndex).stream().mapToInt(Integer::intValue).sum() + 1;
-                    int max = min + intervalosCodigosDeAula.get(paddingIndex) - 1;
-
+                    System.out.println(curso);
+                    System.out.println(paddingIndex);
+                    System.out.println(intervalosCodigosDeAula.get(paddingIndex));
+                    int max = min + intervalosCodigosDeAula.get(paddingIndex) - 1;                    
                     int novoValor;
                     do {
-                        novoValor = rand.nextInt((max - min) + 1) + min; // Gera valor no intervalo [min, max]
+                        novoValor = rand.nextInt((max - min) + 1) + min; //gera valor no intervalo [min, max]
                     } while (matrizCromossomo[i][posicao] == novoValor);
+                    //atribui o novo valor
                     matrizCromossomo[i][posicao] = novoValor;
-                    //System.out.println(Arrays.toString(matrizCromossomo[i]));
                 }
 
             }
@@ -415,6 +421,13 @@ public class AgApplication {
     }
 
     public static ArrayList<Integer> totalFitness(ArrayList fitness) {
+        /*
+        calcula o acumulado do fitness
+        acumulado[0] = fitness[0]
+        acumulado[1] = fitness[0] + fitness[1]
+        acumulado[2] = fitness[0] + fitness[1] + fitness[2]
+        ...
+         */
         ArrayList<Integer> acumulado = new ArrayList<>();
         int soma = 0;
 
@@ -434,39 +447,36 @@ public class AgApplication {
             int probabilidadeCruzamento,
             String curso
     ) {
-        // 1. Calculando o fitness acumulado
-        //ArrayList<Integer> acumulado = totalFitness(fitnessAbsoluto);
-
-        // 2. Preparar a lista para armazenar a nova geração após o cruzamento
+        // prepara a lista para armazenar a nova geração após o cruzamento
         List<int[]> novaGeracao = new ArrayList<>();
 
-        // 3. Criar um set para armazenar os índices dos cromossomos já selecionados
+        //cria um set para armazenar os índices dos cromossomos já selecionados
         Set<Integer> cromossomosUsados = new HashSet<>();
 
-        // 4. Adicionar os cromossomos elitistas diretamente à nova geração
-        // Lembre-se que os cromossomos elitistas são selecionados previamente no processo
+        //adiciona os cromossomos elitistas diretamente à nova geração
         for (Map.Entry<Integer, int[]> entry : cromossomosSelecionados.entrySet()) {
-            novaGeracao.add(entry.getValue()); // Adicionando cromossomos elitistas à nova geração
+            novaGeracao.add(entry.getValue());
         }
 
-        // 5. Formar todos os casais (metade do tamanho da população - elitismo)
+        //forma todos os casais
         while (novaGeracao.size() < matrizCromossomo.length) {
-
+            //chama o metodo para receber o primeiro pai
             int[] pai1 = selectChromossomeByRoulette(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosUsados);
-
+            //chama o metodo para receber o segundo pai
             int[] pai2 = selectChromossomeByRoulette(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosUsados);
-
+            //verifica se o cromossomo selecionado não é igual, caso seja, chama novamente a função
             while (Arrays.equals(pai1, pai2)) {
                 pai2 = selectChromossomeByRoulette(matrizCromossomo, fitnessAbsoluto, cromossomosSelecionados, cromossomosUsados);
             }
-
+            //gera um random para ver se é menor que a probabilidade de cruzamento
             Random rand = new Random();
             int numeroSorteado = rand.nextInt(100) + 1;
 
             if (numeroSorteado <= probabilidadeCruzamento) {
+                //chama a função de crossover
                 int[][] filhos = crossover(pai1, pai2);
 
-                // Nova geração
+                // adiciona na nova geração
                 novaGeracao.add(filhos[0]);
                 novaGeracao.add(filhos[1]);
             } else {
@@ -474,11 +484,12 @@ public class AgApplication {
                 novaGeracao.add(pai2);
             }
 
-            // Adicionar os índices dos cromossomos usados ao set
-            cromossomosUsados.add(Arrays.hashCode(pai1)); // Usa hashCode para garantir unicidade no set
-            cromossomosUsados.add(Arrays.hashCode(pai2)); // Usa hashCode para garantir unicidade no set
+            //adiciona os índices dos cromossomos usados ao set
+            cromossomosUsados.add(Arrays.hashCode(pai1)); //usa hashCode para garantir unicidade no set
+            cromossomosUsados.add(Arrays.hashCode(pai2)); //usa hashCode para garantir unicidade no set
         }
 
+        //verifica qual o curso para atribuir as novas gerações as matrizes
         switch (curso) {
             case "CC" -> {
                 matrizCC = novaGeracao.toArray(int[][]::new);
@@ -511,60 +522,60 @@ public class AgApplication {
 
     private static int[][] crossover(int[] pai1, int[] pai2) {
         Random rand = new Random();
-        int pontoCrossover = rand.nextInt(pai1.length); // Ponto aleatório entre 0 e o comprimento do cromossomo
-        //System.out.println("CORTE " + pontoCrossover);
+        int pontoCrossover = rand.nextInt(pai1.length); //ponto aleatório entre 0 e o comprimento do cromossomo
 
         int[] filho1 = new int[pai1.length];
         int[] filho2 = new int[pai2.length];
 
-        // O filho 1 recebe a parte do pai1 até o ponto de crossover e a parte do pai2 após o ponto de crossover
+        //o filho 1 recebe a parte do pai1 até o ponto de crossover e a parte do pai2 após o ponto de crossover
         System.arraycopy(pai1, 0, filho1, 0, pontoCrossover);
         System.arraycopy(pai2, pontoCrossover, filho1, pontoCrossover, pai2.length - pontoCrossover);
 
-        // O filho 2 recebe a parte do pai2 até o ponto de crossover e a parte do pai1 após o ponto de crossover
+        //o filho 2 recebe a parte do pai2 até o ponto de crossover e a parte do pai1 após o ponto de crossover
         System.arraycopy(pai2, 0, filho2, 0, pontoCrossover);
         System.arraycopy(pai1, pontoCrossover, filho2, pontoCrossover, pai1.length - pontoCrossover);
 
+        //criação da matriz filhos
         int[][] filhos = new int[2][];
         filhos[0] = filho1;
         filhos[1] = filho2;
 
-        /*System.out.println("PAI 1 " + Arrays.toString(pai1));
-        System.out.println("PAI 2 " + Arrays.toString(pai2));
-        System.out.println("=================================");
-        System.out.println("FILHO 1 " + Arrays.toString(filho1));
-        System.out.println("FILHO 2 " + Arrays.toString(filho2));*/
         return filhos;
     }
 
     private static int[] selectChromossomeByRoulette(int[][] matrizCromossomo, ArrayList<Integer> acumulado, Map<Integer, int[]> cromossomosSelecionados, Set<Integer> cromossomosUsados) {
+        //random para gerar o ponto de corte baseado no acumulado
         Random rand = new Random();
         int pontoSorteado = rand.nextInt(acumulado.get(acumulado.size() - 1));  // Sorteando um ponto na roleta
 
-        // Verificando qual cromossomo corresponde ao ponto sorteado
+        // verifica qual cromossomo corresponde ao ponto sorteado
         for (int i = 0; i < acumulado.size(); i++) {
-            // Verificar se o cromossomo foi selecionado por elitismo ou já foi utilizado
+            //verifica se o cromossomo foi selecionado por elitismo ou já foi utilizado
             if (pontoSorteado < acumulado.get(i)) {
                 if (!cromossomosSelecionados.containsKey(i) && !cromossomosUsados.contains(i)) {
-                    cromossomosUsados.add(i); // Adiciona o índice ao set para garantir que não se repita
-                    return matrizCromossomo[i];  // Retorna o cromossomo correspondente ao ponto sorteado
+                    cromossomosUsados.add(i); //adiciona o índice ao set para garantir que não se repita
+                    return matrizCromossomo[i];  //retorna o cromossomo correspondente ao ponto sorteado
                 } else {
-                    // Se o cromossomo já foi elitista ou já foi usado, tenta outro ponto na roleta
+                    //se o cromossomo já foi elitista ou já foi usado, tenta outro ponto na roleta
                     return selectChromossomeByRoulette(matrizCromossomo, acumulado, cromossomosSelecionados, cromossomosUsados);
                 }
             }
         }
-
         return matrizCromossomo[matrizCromossomo.length - 1];
     }
 
     public static int findWorkload(int codigo, List<Disciplina> listaAtual) {
         int cargaHoraria = 0;
+        //loop com o tamanho da lista do curso relacionado
         for (int i = 0; i < listaAtual.size(); i++) {
+            //verifica se o codigo é igual ao da lista
             if (codigo == listaAtual.get(i).getCodigo()) {
+                //se for igual pega a carga horária em relação a posição
                 cargaHoraria = listaAtual.get(i).getCargaHoraria();
+                break;
             }
         }
+        //retorna a carga horária obtida
         return cargaHoraria;
     }
 
@@ -614,6 +625,7 @@ public class AgApplication {
             // Verifica se o objeto é do tipo Professor
             if (disponibilidade.get(i) instanceof Professor) {
                 Professor professor = disponibilidade.get(i);
+                //verifica se o nome é igual ao da lista de disponibilidade
                 if (nome.equals(professor.getNome())) {
                     diasProfessores = professor.getHorarios();
                     for (int j = 0; j < diasProfessores.size(); j++) {
@@ -649,6 +661,7 @@ public class AgApplication {
     }
 
     public static int verifyIntervals(int[][] matrizCromossomo, ArrayList codLidos, List<Integer> intervalosCodigosDeAula, int pontuacao, int nRepeticao, String curso) {
+        //faz a verificação de quais códigos do padding do cromossomo não foram lidos
         int inicioLido = 0;
         int finalLido = 0;
         if (nRepeticao == 0) {
@@ -665,7 +678,6 @@ public class AgApplication {
             if (!(curso.equals("EQ") && nRepeticao == 3)) {
                 finalLido += intervalosCodigosDeAula.get(x + 1);
             }
-
         }
 
         Set<Integer> esperado = new HashSet<>();
@@ -676,13 +688,12 @@ public class AgApplication {
         Set<Integer> lidos = new HashSet<>(codLidos);
         esperado.removeAll(lidos);
 
+        //caso algum codigo não for lido é descontado 10 pontos a cada código
         if (!esperado.isEmpty()) {
             for (Integer cod : esperado) {
                 pontuacao = pontuacao - 10;
             }
-//            System.out.println("De " + inicioLido + " a " + finalLido + " faltou: " + esperado + ", pontuacao " + pontuacao);
         } else {
-//            System.out.println("Não faltou");
         }
 
         return pontuacao;
@@ -691,26 +702,29 @@ public class AgApplication {
     public static ScheduleResultDTO initializeMain(GeneticConfigDTO config) {
         long startTime = System.currentTimeMillis();
         clearFitness();
-        // Configura os parâmetros do algoritmo 
+        //Recebe o valor das váriaveis do front
         AgApplication.probabilidadeCruzamentoFront = config.getProbabilidadeCruzamento();
         AgApplication.probabilidadeMutacaoFront = config.getProbabilidadeMutacao();
         AgApplication.qtdElitismoFront = config.getQtdElitismo();
         AgApplication.iteracoesFront = config.getIteracoes();
         AgApplication.iteracoesSemMelhoriaFront = config.getIteracoesSemMelhoria();
 
+        //chamada da função do inicio do algoritmo
         int contadorIteracoes = initializeAlgorithm();
 
+        //calculo do tmepo de duração do algoritmo
         long endTime = System.currentTimeMillis();
-
         long duration = endTime - startTime;
-        // Isso pode envolver várias etapas, como inicialização de população, cruzamento, mutação, etc. 
+
+        //criação do objeto da classe que irá para o back
         ScheduleResultDTO result = new ScheduleResultDTO();
 
-        result.setBestFitnessScore(maiorValorCromossomo);
-
+        //criação do objeto que irá preencher as tabelas
         ObjetoTabela objCC = new ObjetoTabela(
-                bestChromossomeCC,
+                bestChromossomeCC, //codigos do melhor cromossomo
+                //chamada da função para achar o nome da aula em relação ao codigo do cromossomo
                 findClassName(bestChromossomeCC, disciplinaCC),
+                //chamada da função para achar o nome do professor ministrante de cada aula
                 findProfessorNameArray(bestChromossomeCC, disciplinaCC)
         );
         ObjetoTabela objEQ = new ObjetoTabela(
@@ -738,15 +752,20 @@ public class AgApplication {
                 findClassName(bestChromossomeTM, disciplinaTM),
                 findProfessorNameArray(bestChromossomeTM, disciplinaTM)
         );
-        result.setObjTabela(new ObjetoTabela[]{objCC, objEQ, objEM, objTA, objTI, objTM});
-        result.setContIteracoes(contadorIteracoes);
-        result.setIteracoesTotal(iteracoesFront);
-        result.setTempoExecucao(duration);
+        //setters do objeto result
+        result.setBestFitnessScore(maiorValorCromossomo);//melhor fitness
+        result.setObjTabela(new ObjetoTabela[]{objCC, objEQ, objEM, objTA, objTI, objTM});//obejtos da tabela
+        result.setContIteracoes(contadorIteracoes);//quantas iterações foram feitas
+        result.setIteracoesTotal(iteracoesFront);//quantidades de iteracoes que o front pediu
+        result.setTempoExecucao(duration);//tempo de execução do programa
+
+        //retorna o result
         return result;
     }
 
     public static int initializeAlgorithm() {
-        loadDisciplineFiles();
+        //leitura do arquivo dos cursos
+        loadCursesFiles();
         int contadorIteracoes = 0;
         int contadorSemMelhoria = 0;
         // Variáveis para armazenar o melhor fitness de cada curso
@@ -759,6 +778,8 @@ public class AgApplication {
 
         for (int i = 0; i < iteracoesFront; i++) {
             contadorIteracoes++;
+
+            //chamada de método para gerar a matriz para cada curso
             generateRandomPositionsForClassCode(disciplinaCC, "CC");
             generateRandomPositionsForClassCode(disciplinaEM, "EM");
             generateRandomPositionsForClassCode(disciplinaEQ, "EQ");
@@ -778,15 +799,17 @@ public class AgApplication {
             crossingChromossomes(qtdElitismoFront, probabilidadeCruzamentoFront, matrizTM, fitnessTM, "TM");
 
             //chamada de método da mutação
-            mutatingChromossomes(probabilidadeMutacaoFront, matrizCC, intervalosCodigosDeAulaCC);
-            mutatingChromossomes(probabilidadeMutacaoFront, matrizEQ, intervalosCodigosDeAulaEQ);
-            mutatingChromossomes(probabilidadeMutacaoFront, matrizEM, intervalosCodigosDeAulaEM);
-            mutatingChromossomes(probabilidadeMutacaoFront, matrizTA, intervalosCodigosDeAulaTA);
-            mutatingChromossomes(probabilidadeMutacaoFront, matrizTI, intervalosCodigosDeAulaTI);
-            mutatingChromossomes(probabilidadeMutacaoFront, matrizTM, intervalosCodigosDeAulaTM);
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizCC, intervalosCodigosDeAulaCC, "CC");
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizEQ, intervalosCodigosDeAulaEQ, "EQ");
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizEM, intervalosCodigosDeAulaEM, "EM");
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizTA, intervalosCodigosDeAulaTA, "TA");
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizTI, intervalosCodigosDeAulaTI, "TI");
+            mutatingChromossomes(probabilidadeMutacaoFront, matrizTM, intervalosCodigosDeAulaTM, "TM");
 
+            //recalculo do fitnnes após processo de crossover e mutação
             recallFitness();
 
+            //variavel para obter resultado se houver melhoria
             boolean houveMelhoriaEmAlgumCurso = false;
 
             // Verifica se houve melhoria no fitness de cada curso
@@ -822,16 +845,17 @@ public class AgApplication {
                 melhorFitnessTM = melhorFitnessAtualTM;
                 houveMelhoriaEmAlgumCurso = true;
             }
-            // Se nenhum curso teve melhoria, incrementa o contador de iterações sem melhoria
+            //se nenhum curso teve melhoria, incrementa o contador de iterações sem melhoria
             if (!houveMelhoriaEmAlgumCurso) {
                 contadorSemMelhoria++;
             }
 
+            //se o contadorSemMelhoria for maior ou igual ao numero de iteracoes sem melhoria que recebe do front o programa é parado
             if (contadorSemMelhoria >= iteracoesSemMelhoriaFront && iteracoesSemMelhoriaFront != 0) {
-                System.out.println("Interrompendo: Nenhum curso teve melhoria após " + iteracoesSemMelhoriaFront + " iterações.");
                 break;
             }
         }
+        //retorna a quantidade de iterações
         return contadorIteracoes;
     }
 
@@ -848,9 +872,11 @@ public class AgApplication {
         ArrayList descontosTI = new ArrayList();
         ArrayList descontosTM = new ArrayList();
 
+        //leitura do arquivo da disponibilidade dos professores
         String caminhoArquivoDP = "src/main/resources/planilhas/DisponibilidadeProfessores.xlsx";
         List<Professor> disponibilidadeProfessores = FileReaderService.lerHorariosProfessores(caminhoArquivoDP);
 
+        //chamada dos fitness feitos
         fitnessCC = fitnessWorkLoadFunction(matrizCC, "CC",
                 disciplinaCC, intervalosCodigosDeAulaCC);
         descontosCC = fitnessProfessorAvaiabilityFunction(matrizCC, "CC",
@@ -881,6 +907,7 @@ public class AgApplication {
         descontosTM = fitnessProfessorAvaiabilityFunction(matrizTM, "TM",
                 disciplinaTM, disponibilidadeProfessores);
 
+        //ajusta o valor do fitness de cada curso
         for (int i = 0; i < fitnessCC.size(); i++) {
             fitnessCC.set(i, (int) fitnessCC.get(i) - (int) descontosCC.get(i));
             fitnessEQ.set(i, (int) fitnessEQ.get(i) - (int) descontosEQ.get(i));
@@ -890,26 +917,34 @@ public class AgApplication {
             fitnessTM.set(i, (int) fitnessTM.get(i) - (int) descontosTM.get(i));
         }
 
+        //chamada do último fitness
         fitnessBetweenCourses();
 
         //verificar qual o melhor cromossomo
         bestChromossomeVerification();
-        //System.out.println(bestFitness);
-        //System.out.println(maiorValorCromossomo);
+
+        //zera o valor dos fitness para futuras chamadas
         clearFitness();
     }
 
     public static void bestChromossomeVerification() {
+        //variavel para receber qual posição está o maior fitness
         int posicaoMaiorFitness = 0;
-        boolean alterado = false;
         for (int i = 0; i < fitnessCC.size(); i++) {
+            //recebe todos os fitness somados em uma determinada posição
             int fitness = (int) fitnessCC.get(i) + (int) fitnessEQ.get(i) + (int) fitnessEM.get(i)
                     + (int) fitnessTA.get(i) + (int) fitnessTI.get(i) + (int) fitnessTM.get(i);
+            //adiciona no Array do bestFitness
             bestFitness.add(i, (Object) fitness);
+
+            //verifica se a soma é maior que o valor do maior fitness do cromossomo
             if ((int) bestFitness.get(i) > maiorValorCromossomo) {
+                //se for, a variável recebe o valor do bestFitness
                 maiorValorCromossomo = (int) bestFitness.get(i);
+                //a posição é atribuida a variavel
                 posicaoMaiorFitness = i;
-                alterado = true;
+
+                //a variavel de melhores cromossomos dos cursos recebem seus devidos cromossomos
                 bestChromossomeCC = matrizCC[posicaoMaiorFitness];
                 bestChromossomeEM = matrizEM[posicaoMaiorFitness];
                 bestChromossomeEQ = matrizEQ[posicaoMaiorFitness];
@@ -919,14 +954,9 @@ public class AgApplication {
             }
         }
 
-        if (alterado) {
-            System.out.println(maiorValorCromossomo);
-            System.out.println(Arrays.toString(bestChromossomeCC));
-        }
-
     }
 
-    public static void loadDisciplineFiles() {
+    public static void loadCursesFiles() {
         String caminhoArquivoCC = "src/main/resources/planilhas/Curso_CienciaComputacao.xlsx";
         disciplinaCC = FileReaderService.lerHorarios(caminhoArquivoCC);
 

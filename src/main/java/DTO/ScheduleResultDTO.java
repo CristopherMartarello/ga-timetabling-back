@@ -3,7 +3,7 @@ package DTO;
 import model.ObjetoTabela;
 
 public class ScheduleResultDTO {
-
+    //ARMAZENA OS DADOS QUE SERÃO ENVIADOS PELO FRONT
     private int bestFitnessScore;
     private ObjetoTabela[] objTabela;
     private int contIteracoes;

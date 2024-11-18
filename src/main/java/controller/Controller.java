@@ -23,17 +23,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class Controller implements WebMvcConfigurer {
 
     @Override
+    //função para mapear o cors
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:3000")
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
+        registry.addMapping("/api/**") //back espera pela rota /api
+                .allowedOrigins("http://localhost:3000") //porta utilizada
+                .allowedMethods("GET", "POST", "PUT", "DELETE") //metodos que podem ser recebidos
                 .allowCredentials(true);
     }
     
     
-    @PostMapping("/configure")  // Este mapeamento é para o endpoint /api/configure
+    @PostMapping("/configure")
+    /*metodo post que na função acima '/api/**' ira o /configure/ 
+    @RequestBody, pega a requisição e vai para a classe Genetic, que receberá as variáveis requisitadas pelo front*/
     public ResponseEntity<ScheduleResultDTO> configureAlgorithm(@Valid @RequestBody GeneticConfigDTO config) {
+        //classe Schedule receberá o resultado do algoritomo, aqui chamaremos a função para começar todo o processo
         ScheduleResultDTO result = AgApplication.initializeMain(config);
+        //retorno da resposta para o front
         return ResponseEntity.ok(result);
     }
 
