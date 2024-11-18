@@ -1,22 +1,21 @@
 package DTO;
 
-import java.util.ArrayList;
 import model.ObjetoTabela;
 
 public class ScheduleResultDTO {
 
-    private ArrayList<Integer> bestFitnessScore;
+    private int bestFitnessScore;
     private ObjetoTabela[] objTabela;
     private int contIteracoes;
     private int IteracoesTotal;
     private long tempoExecucao;
 
     
-    public ArrayList<Integer> getBestFitnessScore() {
+    public int getBestFitnessScore() {
         return bestFitnessScore;
     }
 
-    public void setBestFitnessScore(ArrayList<Integer> bestFitnessScore) {
+    public void setBestFitnessScore(int bestFitnessScore) {
         this.bestFitnessScore = bestFitnessScore;
     }
 

@@ -20,7 +20,7 @@ import org.springframework.context.annotation.ComponentScan;
 import service.FileReaderService;
 
 @SpringBootApplication
-@ComponentScan(basePackages="controller")
+@ComponentScan(basePackages = "controller")
 public class AgApplication {
 
     //Variaveis recebidas pelo front
@@ -31,6 +31,10 @@ public class AgApplication {
     public static ArrayList fitnessCC = new ArrayList(), fitnessEM = new ArrayList(), fitnessEQ = new ArrayList(),
             fitnessTA = new ArrayList(), fitnessTI = new ArrayList(), fitnessTM = new ArrayList();
 
+    public static ArrayList bestFitness = new ArrayList();
+
+    public static int maiorValorCromossomo = 0;
+
     //Variaveis da matriz de cada curso
     public static int[][] matrizCC = new int[20][40], matrizEM = new int[20][40], matrizEQ = new int[20][40],
             matrizTA = new int[20][40], matrizTI = new int[20][40], matrizTM = new int[20][40];
@@ -38,10 +42,6 @@ public class AgApplication {
     //Variaveis do melhor cromossomo da matriz de cada curso
     public static int[] bestChromossomeCC = new int[40], bestChromossomeEM = new int[40], bestChromossomeEQ = new int[40],
             bestChromossomeTA = new int[40], bestChromossomeTI = new int[40], bestChromossomeTM = new int[40];
-
-    //Variaveis do melhor fitness de cada curso
-    public static int bestFitnessCC = 0, bestFitnessEM = 0, bestFitnessEQ = 0,
-            bestFitnessTA = 0, bestFitnessTI = 0, bestFitnessTM = 0;
 
     //Variaveis dos arquivos lidos da disciplina
     public static List<Disciplina> disciplinaCC, disciplinaEM, disciplinaEQ, disciplinaTA, disciplinaTI, disciplinaTM;
@@ -308,37 +308,37 @@ public class AgApplication {
                 String nomeTM = findProfessorName(codigoTM, disciplinaTM);
 
                 //verificações curso graduação
-                if (nomeCC.equals(nomeEM)) {
-                    //System.out.println(nomeCC + " x " + nomeEM);
-                    //System.out.println(codigoCC + " x " + codigoEM);
+                if (nomeCC.equals(nomeEM) || nomeCC.equals(nomeEQ) || (nomeCC.equals(nomeTA) && codigoTA != -1)
+                        || (nomeCC.equals(nomeTI) && codigoTI != -1) || (nomeCC.equals(nomeTM) && codigoTM != -1)) {
                     fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
-                    fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
                 }
-                if (nomeCC.equals(nomeEQ)) {
-                    fitnessCC.set(i, (int) fitnessCC.get(i) - 10);
+                if (nomeEQ.equals(nomeCC) || nomeEQ.equals(nomeEM) || (nomeEQ.equals(nomeTA) && codigoTA != -1)
+                        || (nomeEQ.equals(nomeTI) && codigoTI != -1) || (nomeEQ.equals(nomeTM) && codigoTM != -1)) {
                     fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
                 }
-                if (nomeEQ.equals(nomeEM)) {
-                    fitnessEQ.set(i, (int) fitnessEQ.get(i) - 10);
+                if (nomeEM.equals(nomeCC) || nomeEM.equals(nomeEQ) || (nomeEM.equals(nomeTA) && codigoTA != -1)
+                        || (nomeEM.equals(nomeTI) && codigoTI != -1) || (nomeEM.equals(nomeTM) && codigoTM != -1)) {
                     fitnessEM.set(i, (int) fitnessEM.get(i) - 10);
-                }
-                //verificar se as aulas não forem segunda
-                if (codigoTA != -1 && codigoTI != -1 && codigoTM != -1) {
-                    //verificações curso técnico
-                    if (nomeTA.equals(nomeTI)) {
-                        fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
-                        fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
-                    }
-                    if (nomeTA.equals(nomeTM)) {
-                        fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
-                        fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
-                    }
-                    if (nomeTI.equals(nomeTM)) {
-                        fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
-                        fitnessTM.set(i, (int) fitnessTM.get(i) - 10);
-                    }
                 }
 
+                if (codigoTA != -1) {
+                    if (nomeTA.equals(nomeCC) || nomeTA.equals(nomeEQ) || nomeTA.equals(nomeEM)
+                            || nomeTA.equals(nomeTI) || nomeTA.equals(nomeTM)) {
+                        fitnessTA.set(i, (int) fitnessTA.get(i) - 10);
+                    }
+                }
+                if (codigoTI != -1) {
+                    if (nomeTI.equals(nomeCC) || nomeTI.equals(nomeEQ) || nomeTI.equals(nomeEM)
+                            || nomeTI.equals(nomeTA) || nomeTI.equals(nomeTM)) {
+                        fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
+                    }
+                }
+                if (codigoTM != -1) {
+                    if (nomeTM.equals(nomeCC) || nomeTM.equals(nomeEQ) || nomeTM.equals(nomeEM)
+                            || nomeTM.equals(nomeTA) || nomeTM.equals(nomeTI)) {
+                        fitnessTI.set(i, (int) fitnessTI.get(i) - 10);
+                    }
+                }
             }
         }
         /*System.out.println("DEPOIS: " + fitnessCC);
@@ -572,15 +572,15 @@ public class AgApplication {
         if (codigo != -1) {
             for (int i = 0; i < listaAtual.size(); i++) {
                 if (codigo == listaAtual.get(i).getCodigo()) {
-                    return listaAtual.get(i).getProfessor();                    
+                    return listaAtual.get(i).getProfessor();
                 }
             }
         }
 
         return "";
     }
-    
-    public static String[] findClassName(int[] bestChromossome, List<Disciplina> listaAtual){
+
+    public static String[] findClassName(int[] bestChromossome, List<Disciplina> listaAtual) {
         String[] nomeMateria = new String[bestChromossome.length];
         for (int i = 0; i < bestChromossome.length; i++) {
             for (int j = 0; j < listaAtual.size(); j++) {
@@ -589,11 +589,10 @@ public class AgApplication {
                 }
             }
         }
-        
-        
+
         return nomeMateria;
     }
-    
+
     public static String[] findProfessorNameArray(int[] bestChromossome, List<Disciplina> listaAtual) {
         String[] nomeProfessores = new String[bestChromossome.length];
         for (int i = 0; i < bestChromossome.length; i++) {
@@ -603,8 +602,7 @@ public class AgApplication {
                 }
             }
         }
-        
-        
+
         return nomeProfessores;
     }
 
@@ -708,46 +706,39 @@ public class AgApplication {
         // Isso pode envolver várias etapas, como inicialização de população, cruzamento, mutação, etc. 
         ScheduleResultDTO result = new ScheduleResultDTO();
 
-        result.setBestFitnessScore(new ArrayList<>(Arrays.asList(
-                bestFitnessCC,
-                bestFitnessEM,
-                bestFitnessEQ,
-                bestFitnessTA,
-                bestFitnessTI,
-                bestFitnessTM
-        )));
-        
+        result.setBestFitnessScore(maiorValorCromossomo);
+
         ObjetoTabela objCC = new ObjetoTabela(
-                bestChromossomeCC, 
-                findClassName(bestChromossomeCC, disciplinaCC), 
+                bestChromossomeCC,
+                findClassName(bestChromossomeCC, disciplinaCC),
                 findProfessorNameArray(bestChromossomeCC, disciplinaCC)
         );
         ObjetoTabela objEQ = new ObjetoTabela(
-                bestChromossomeEQ, 
-                findClassName(bestChromossomeEQ, disciplinaEQ), 
+                bestChromossomeEQ,
+                findClassName(bestChromossomeEQ, disciplinaEQ),
                 findProfessorNameArray(bestChromossomeEQ, disciplinaEQ)
         );
         ObjetoTabela objEM = new ObjetoTabela(
-                bestChromossomeEM, 
-                findClassName(bestChromossomeEM, disciplinaEM), 
+                bestChromossomeEM,
+                findClassName(bestChromossomeEM, disciplinaEM),
                 findProfessorNameArray(bestChromossomeEM, disciplinaEM)
         );
         ObjetoTabela objTA = new ObjetoTabela(
-                bestChromossomeTA, 
-                findClassName(bestChromossomeTA, disciplinaTA), 
+                bestChromossomeTA,
+                findClassName(bestChromossomeTA, disciplinaTA),
                 findProfessorNameArray(bestChromossomeTA, disciplinaTA)
         );
         ObjetoTabela objTI = new ObjetoTabela(
-                bestChromossomeTI, 
-                findClassName(bestChromossomeTI, disciplinaTI), 
+                bestChromossomeTI,
+                findClassName(bestChromossomeTI, disciplinaTI),
                 findProfessorNameArray(bestChromossomeTI, disciplinaTI)
         );
         ObjetoTabela objTM = new ObjetoTabela(
-                bestChromossomeTM, 
-                findClassName(bestChromossomeTM, disciplinaTM), 
+                bestChromossomeTM,
+                findClassName(bestChromossomeTM, disciplinaTM),
                 findProfessorNameArray(bestChromossomeTM, disciplinaTM)
         );
-        result.setObjTabela(new ObjetoTabela[] {objCC, objEQ, objEM, objTA, objTI, objTM});
+        result.setObjTabela(new ObjetoTabela[]{objCC, objEQ, objEM, objTA, objTI, objTM});
         result.setContIteracoes(contadorIteracoes);
         result.setIteracoesTotal(iteracoesFront);
         result.setTempoExecucao(duration);
@@ -902,52 +893,37 @@ public class AgApplication {
         fitnessBetweenCourses();
 
         //verificar qual o melhor cromossomo
-        bestChromossomeVerification(bestFitnessCC, fitnessCC, matrizCC, "CC");
-        bestChromossomeVerification(bestFitnessEQ, fitnessEQ, matrizEQ, "EQ");
-        bestChromossomeVerification(bestFitnessEM, fitnessEM, matrizEM, "EM");
-        bestChromossomeVerification(bestFitnessTA, fitnessTA, matrizTA, "TA");
-        bestChromossomeVerification(bestFitnessTI, fitnessTI, matrizTI, "TI");
-        bestChromossomeVerification(bestFitnessTM, fitnessTM, matrizTM, "TM");
-        
-        clearFitness();                
+        bestChromossomeVerification();
+        //System.out.println(bestFitness);
+        //System.out.println(maiorValorCromossomo);
+        clearFitness();
     }
 
-    public static void bestChromossomeVerification(int bestFitness, ArrayList fitness, int[][] matrizCromossomo, String curso) {
-        for (int i = 0; i < fitness.size(); i++) {
-            int fitnessAtual = (int) fitness.get(i);
-            if (bestFitness < fitnessAtual) {
-                bestFitness = fitnessAtual;
-                switch (curso) {
-                    case "CC":
-                        bestChromossomeCC = matrizCromossomo[i];
-                        bestFitnessCC = fitnessAtual;
-                        break;
-                    case "EQ":
-                        bestChromossomeEQ = matrizCromossomo[i];
-                        bestFitnessEQ = fitnessAtual;
-                        break;
-                    case "EM":
-                        bestChromossomeEM = matrizCromossomo[i];
-                        bestFitnessEM = fitnessAtual;
-                        break;
-                    case "TA":
-                        bestChromossomeTA = matrizCromossomo[i];
-                        bestFitnessTA = fitnessAtual;
-                        break;
-                    case "TI":
-                        bestChromossomeTI = matrizCromossomo[i];
-                        bestFitnessTI = fitnessAtual;
-                        break;
-                    case "TM":
-                        bestChromossomeTM = matrizCromossomo[i];
-                        bestFitnessTM = fitnessAtual;
-                        break;
-                    default:
-                        throw new AssertionError();
-                }
-
+    public static void bestChromossomeVerification() {
+        int posicaoMaiorFitness = 0;
+        boolean alterado = false;
+        for (int i = 0; i < fitnessCC.size(); i++) {
+            int fitness = (int) fitnessCC.get(i) + (int) fitnessEQ.get(i) + (int) fitnessEM.get(i)
+                    + (int) fitnessTA.get(i) + (int) fitnessTI.get(i) + (int) fitnessTM.get(i);
+            bestFitness.add(i, (Object) fitness);
+            if ((int) bestFitness.get(i) > maiorValorCromossomo) {
+                maiorValorCromossomo = (int) bestFitness.get(i);
+                posicaoMaiorFitness = i;
+                alterado = true;
+                bestChromossomeCC = matrizCC[posicaoMaiorFitness];
+                bestChromossomeEM = matrizEM[posicaoMaiorFitness];
+                bestChromossomeEQ = matrizEQ[posicaoMaiorFitness];
+                bestChromossomeTA = matrizTA[posicaoMaiorFitness];
+                bestChromossomeTI = matrizTI[posicaoMaiorFitness];
+                bestChromossomeTM = matrizTM[posicaoMaiorFitness];
             }
         }
+
+        if (alterado) {
+            System.out.println(maiorValorCromossomo);
+            System.out.println(Arrays.toString(bestChromossomeCC));
+        }
+
     }
 
     public static void loadDisciplineFiles() {
@@ -969,8 +945,8 @@ public class AgApplication {
         String caminhoArquivoTM = "src/main/resources/planilhas/Curso_TecnicoMecatronicaVespertino_aula3a6a.xlsx";
         disciplinaTM = FileReaderService.lerHorarios(caminhoArquivoTM);
     }
-    
-    public static void clearFitness(){
+
+    public static void clearFitness() {
         fitnessCC.clear();
         fitnessEQ.clear();
         fitnessEM.clear();

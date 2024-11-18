@@ -33,17 +33,7 @@ public class Controller implements WebMvcConfigurer {
     
     @PostMapping("/configure")  // Este mapeamento é para o endpoint /api/configure
     public ResponseEntity<ScheduleResultDTO> configureAlgorithm(@Valid @RequestBody GeneticConfigDTO config) {
-        // Processa os dados recebidos
-        /*System.out.println("Probabilidade de Cruzamento: " + config.getProbabilidadeCruzamento());
-        System.out.println("Mutação: " + config.getProbabilidadeMutacao());
-        System.out.println("Qtd. Elitismo: " + config.getQtdElitismo());
-        System.out.println("Iterações: " + config.getIteracoes());
-        System.out.println("Iterações sem Melhoria: " + config.getIteracoesSemMelhoria());
-        System.out.println("Calculando...");*/
-        // Aqui você pode chamar métodos para configurar ou executar o algoritmo
         ScheduleResultDTO result = AgApplication.initializeMain(config);
-        //System.out.println("Enviando...");
-
         return ResponseEntity.ok(result);
     }
 
