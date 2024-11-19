@@ -403,9 +403,6 @@ public class AgApplication {
                     int tamanhoPadding = 10;
                     int paddingIndex = posicao / tamanhoPadding;
                     int min = (paddingIndex == 0) ? 1 : intervalosCodigosDeAula.subList(0, paddingIndex).stream().mapToInt(Integer::intValue).sum() + 1;
-                    System.out.println(curso);
-                    System.out.println(paddingIndex);
-                    System.out.println(intervalosCodigosDeAula.get(paddingIndex));
                     int max = min + intervalosCodigosDeAula.get(paddingIndex) - 1;                    
                     int novoValor;
                     do {
@@ -769,16 +766,11 @@ public class AgApplication {
         int contadorIteracoes = 0;
         int contadorSemMelhoria = 0;
         // Variáveis para armazenar o melhor fitness de cada curso
-        int melhorFitnessCC = Integer.MIN_VALUE;
-        int melhorFitnessEM = Integer.MIN_VALUE;
-        int melhorFitnessEQ = Integer.MIN_VALUE;
-        int melhorFitnessTA = Integer.MIN_VALUE;
-        int melhorFitnessTI = Integer.MIN_VALUE;
-        int melhorFitnessTM = Integer.MIN_VALUE;
+        int melhorFitness = Integer.MIN_VALUE;
 
         for (int i = 0; i < iteracoesFront; i++) {
             contadorIteracoes++;
-
+            System.out.println("Contador: " + contadorIteracoes);
             //chamada de método para gerar a matriz para cada curso
             generateRandomPositionsForClassCode(disciplinaCC, "CC");
             generateRandomPositionsForClassCode(disciplinaEM, "EM");
@@ -812,44 +804,17 @@ public class AgApplication {
             //variavel para obter resultado se houver melhoria
             boolean houveMelhoriaEmAlgumCurso = false;
 
-            // Verifica se houve melhoria no fitness de cada curso
-            int melhorFitnessAtualCC = getMelhorFitness(fitnessCC);
-            int melhorFitnessAtualEM = getMelhorFitness(fitnessEM);
-            int melhorFitnessAtualEQ = getMelhorFitness(fitnessEQ);
-            int melhorFitnessAtualTA = getMelhorFitness(fitnessTA);
-            int melhorFitnessAtualTI = getMelhorFitness(fitnessTI);
-            int melhorFitnessAtualTM = getMelhorFitness(fitnessTM);
-
-            // Se algum curso teve melhoria, atualiza o melhor fitness
-            if (melhorFitnessAtualCC > melhorFitnessCC) {
-                melhorFitnessCC = melhorFitnessAtualCC;
+            // Se teve melhoria, atualiza o melhor fitness            
+            if (maiorValorCromossomo > melhorFitness) {
+                melhorFitness = maiorValorCromossomo;
                 houveMelhoriaEmAlgumCurso = true;
-            }
-            if (melhorFitnessAtualEM > melhorFitnessEM) {
-                melhorFitnessEM = melhorFitnessAtualEM;
-                houveMelhoriaEmAlgumCurso = true;
-            }
-            if (melhorFitnessAtualEQ > melhorFitnessEQ) {
-                melhorFitnessEQ = melhorFitnessAtualEQ;
-                houveMelhoriaEmAlgumCurso = true;
-            }
-            if (melhorFitnessAtualTA > melhorFitnessTA) {
-                melhorFitnessTA = melhorFitnessAtualTA;
-                houveMelhoriaEmAlgumCurso = true;
-            }
-            if (melhorFitnessAtualTI > melhorFitnessTI) {
-                melhorFitnessTI = melhorFitnessAtualTI;
-                houveMelhoriaEmAlgumCurso = true;
-            }
-            if (melhorFitnessAtualTM > melhorFitnessTM) {
-                melhorFitnessTM = melhorFitnessAtualTM;
-                houveMelhoriaEmAlgumCurso = true;
-            }
+            }            
             //se nenhum curso teve melhoria, incrementa o contador de iterações sem melhoria
             if (!houveMelhoriaEmAlgumCurso) {
                 contadorSemMelhoria++;
+            }else{ //caso teve, zera o valor
+                contadorSemMelhoria = 0;
             }
-
             //se o contadorSemMelhoria for maior ou igual ao numero de iteracoes sem melhoria que recebe do front o programa é parado
             if (contadorSemMelhoria >= iteracoesSemMelhoriaFront && iteracoesSemMelhoriaFront != 0) {
                 break;
@@ -857,10 +822,6 @@ public class AgApplication {
         }
         //retorna a quantidade de iterações
         return contadorIteracoes;
-    }
-
-    private static int getMelhorFitness(ArrayList<Integer> fitnessList) {
-        return fitnessList.stream().max(Integer::compare).orElse(Integer.MIN_VALUE);
     }
 
     public static void recallFitness() {
